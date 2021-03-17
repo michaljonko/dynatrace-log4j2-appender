@@ -51,6 +51,11 @@ jar {
 	}
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
 publishing {
 	publications {
 		DynatraceGenericLogIngestAppender(MavenPublication) {
@@ -58,7 +63,7 @@ publishing {
 			groupId appGroup
 			artifactId appName
 			version appVersion
-			artifacts = [jar]
+			artifacts = [jar, sourcesJar]
 		}
 	}
 }

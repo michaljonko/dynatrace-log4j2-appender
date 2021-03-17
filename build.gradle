@@ -1,0 +1,99 @@
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.text.SimpleDateFormat
+
+plugins {
+	id 'java'
+	id 'idea'
+	id 'eclipse'
+
+	id 'com.github.johnrengelman.shadow' version '5.2.0'
+	id 'maven'
+	id 'maven-publish'
+	id 'com.jfrog.bintray' version '1.8.5'
+	id 'signing'
+}
+
+wrapper {
+	gradleVersion = '5.6.4'
+	distributionType = Wrapper.DistributionType.BIN
+}
+
+def appGroup = 'pl.coffeepower.log4j'
+def appName = 'dynatrace-log4j2-appender'
+def appVersion = Files.readAllLines(rootDir.toPath().resolve('version.txt'), Charset.forName('UTF-8'))
+		.first()
+		.trim()
+def appDesc = 'Log4j2 Appender for Dynatrace Generic Log Ingest'
+
+group = appGroup
+version = appVersion
+description = appDesc
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+jar {
+	manifest {
+		attributes(
+				'Built-By': 'Michal Jonko',
+				'Build-Timestamp': new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+				'Created-By': "Gradle ${gradle.gradleVersion}",
+				'Build-Jdk': "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+				'Build-OS': "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
+		)
+	}
+}
+
+publishing {
+	publications {
+		DynatraceGenericLogIngestAppender(MavenPublication) {
+			from components.java
+			groupId appGroup
+			artifactId appName
+			version appVersion
+			artifacts = [jar]
+		}
+	}
+}
+
+bintray {
+	user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+	key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+	publications = ['DynatraceGenericLogIngestAppender']
+	publish = true
+	pkg {
+		repo = 'maven'
+		name = appName
+		desc = appDesc
+		licenses = ['Apache-2.0']
+		vcsUrl = 'https://github.com/michaljonko/dynatrace-log4j2-appender.git'
+		issueTrackerUrl = 'https://github.com/michaljonko/dynatrace-log4j2-appender/issues'
+		websiteUrl = 'https://github.com/michaljonko/dynatrace-log4j2-appender'
+		githubRepo = 'michaljonko/dynatrace-log4j2-appender'
+		githubReleaseNotesFile = 'README.md'
+		labels = ['log4j2', 'dynatrace', 'generic log ingest', 'observability', 'logs']
+		publicDownloadNumbers = true
+		version {
+			name = appVersion
+			desc = 'Dynatrace Generic Log Ingest Log4j2 Appender'
+			released = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date())
+			vcsTag = appVersion
+		}
+	}
+}
+
+dependencies {
+	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
+	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
+
+	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
+
+	annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
+}

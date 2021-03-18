@@ -7,6 +7,10 @@ import static pl.coffeepower.log4j.appender.dynatrace.DynatraceGenericLogIngestM
 import static pl.coffeepower.log4j.appender.dynatrace.DynatraceGenericLogIngestManager.getManager;
 
 import java.io.Serializable;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.core.Appender;
@@ -21,6 +25,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
 import org.apache.logging.log4j.core.layout.SerializedLayout;
+import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.apache.logging.log4j.core.util.JsonUtils;
 import org.apache.logging.log4j.core.util.datetime.FixedDateFormat;
 
@@ -31,15 +36,29 @@ public final class DynatraceGenericLogIngestAppender
 	private static final FixedDateFormat DATE_FORMAT = FixedDateFormat.create(FixedDateFormat.FixedFormat.ISO8601_PERIOD);
 
 	private final DynatraceGenericLogIngestManager manager;
+	private final StrSubstitutor strSubstitutor;
+	private final Map<String, Property> attributes;
 
 	private DynatraceGenericLogIngestAppender(String name,
-			Layout<? extends Serializable> layout, Filter filter,
+			Layout<? extends Serializable> layout,
+			Filter filter,
+			StrSubstitutor strSubstitutor,
 			boolean ignoreExceptions,
 			Property[] properties,
 			DynatraceGenericLogIngestManager manager) {
 		super(name, filter, layout, ignoreExceptions, properties);
 
 		this.manager = requireNonNull(manager, "manager is null");
+		this.strSubstitutor = requireNonNull(strSubstitutor, "strSubstitutor is null");
+
+		if (nonNull(properties) && properties.length > 0) {
+			this.attributes = new HashMap<>(properties.length);
+			for (Property property : properties) {
+				this.attributes.put(property.getName(), property);
+			}
+		} else {
+			this.attributes = Collections.emptyMap();
+		}
 	}
 
 	@Override
@@ -68,6 +87,16 @@ public final class DynatraceGenericLogIngestAppender
 				.append(",")
 				.append(dquote("level")).append(":").append(dquote(event.getLevel().name())).append(",");
 
+		for (Property attribute : attributes.values()) {
+			String attrKey = attribute.getName();
+			String attrValue = attribute.isValueNeedsLookup()
+					? strSubstitutor.replace(event, attribute.getValue())
+					: attribute.getValue();
+			jsonBuilder.append(dquote(attrKey)).append(":\"");
+			JsonUtils.quoteAsString(attrValue, jsonBuilder);
+			jsonBuilder.append("\",");
+		}
+
 		jsonBuilder.append(dquote("message")).append(":\"");
 		JsonUtils.quoteAsString(new String(message), jsonBuilder);
 		jsonBuilder.append("\"}");
@@ -91,17 +120,17 @@ public final class DynatraceGenericLogIngestAppender
 
 		@PluginAttribute("activeGateUrl")
 		@Required(message = "No URL provided for ActiveGate")
-		private String activeGateUrl;
+		private URL activeGateUrl;
 		@PluginAttribute(value = "token", sensitive = true)
 		private String token;
 		@PluginAttribute(value = "sslValidation", defaultBoolean = true)
 		private boolean sslValidation;
 
-		public String getActiveGateUrl() {
+		public URL getActiveGateUrl() {
 			return activeGateUrl;
 		}
 
-		public B setActiveGateUrl(String activeGateUrl) {
+		public B setActiveGateUrl(URL activeGateUrl) {
 			this.activeGateUrl = activeGateUrl;
 			return asBuilder();
 		}
@@ -134,6 +163,7 @@ public final class DynatraceGenericLogIngestAppender
 			return new DynatraceGenericLogIngestAppender(getName(),
 					getOrCreateLayout(),
 					getFilter(),
+					getConfiguration().getStrSubstitutor(),
 					isIgnoreExceptions(),
 					getPropertyArray(),
 					manager);

@@ -4,6 +4,7 @@ Log4j2 Appender to integrate Java applications with Dynatrace Generic Log Ingest
 To make it works you have to provide two parameters:
 - `activeGateUrl` - URL to ActiveGate instance with Generic Log Ingest module enabled
 - `token` - valid token with _Log Import_ permission enabled
+- `sslValidation` - SSL certificate has to be valid. _false_ value will pass self-signed certificates. (OPTIONAL)
 
 Log4j2 version >= 2.12.0
 
@@ -35,12 +36,12 @@ Maven
 <dependency>
 	<groupId>pl.coffeepower.log4j</groupId>
 	<artifactId>dynatrace-log4j2-appender</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<type>pom</type>
 </dependency>
 ```
 ### Example
-log4j2.xml
+Simple configuration with defined layout for a message (will be shown as content in Dynatrace Log Viewer):
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
@@ -58,6 +59,29 @@ log4j2.xml
 	<Loggers>
 		<Root level="info">
 			<AppenderRef ref="console"/>
+			<AppenderRef ref="myAppender"/>
+		</Root>
+	</Loggers>
+</Configuration>
+```
+
+
+Simple configuration with three additional attributes (will be part of the log) and custom layout for a message:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+		<DynatraceGenericLogIngestAppender name="myAppender"
+										   activeGateUrl="https://{ACTIVE_GATE_URL}/api/v2/logs/ingest"
+										   token="{TOKEN_WITH_LOG_IMPORT_PERMISSION}">
+			<Property name="service.name">Log4j2 Appender Tester</Property>
+			<Property name="dt.os.type">${java:os}</Property>
+			<Property name="dt.logpath">${sys:user.dir}/debug.log</Property>
+			<PatternLayout pattern="[%t] %-5level %logger - %msg%n"/>
+		</DynatraceGenericLogIngestAppender>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
 			<AppenderRef ref="myAppender"/>
 		</Root>
 	</Loggers>

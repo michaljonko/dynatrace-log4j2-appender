@@ -5,6 +5,7 @@ import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +52,7 @@ final class DynatraceGenericLogIngestManager
 
 		requireNonNull(config, "config is null");
 
-		this.activeGateUrl = requireNonNull(config.getActiveGateUrl(), "activeGateUrl is null");
+		this.activeGateUrl = requireNonNull(config.getActiveGateUrl(), "activeGateUrl is null").toString();
 		this.authorizationTokenHeader =
 				new BasicHeader("Authorization", "Api-Token " + requireNonNull(config.getToken(), "token is null"));
 
@@ -121,11 +122,11 @@ final class DynatraceGenericLogIngestManager
 	static final class ManagerConfig {
 
 		private final LoggerContext loggerContext;
-		private final String activeGateUrl;
+		private final URL activeGateUrl;
 		private final String token;
 		private final boolean sslValidation;
 
-		ManagerConfig(LoggerContext loggerContext, String activeGateUrl, String token, boolean sslValidation) {
+		ManagerConfig(LoggerContext loggerContext, URL activeGateUrl, String token, boolean sslValidation) {
 			this.loggerContext = requireNonNull(loggerContext, "loggerContext is null");
 			this.activeGateUrl = requireNonNull(activeGateUrl, "activeGateUrl is null");
 			this.token = requireNonNull(token, "token is null");
@@ -136,7 +137,7 @@ final class DynatraceGenericLogIngestManager
 			return loggerContext;
 		}
 
-		String getActiveGateUrl() {
+		URL getActiveGateUrl() {
 			return activeGateUrl;
 		}
 

@@ -7,14 +7,11 @@ To make it works you have to provide two parameters:
 
 Log4j2 version >= 2.12.0
 
-### Gradle dependencies
-
-With my own Bintray repository
+### How to use it:
+Gradle
 ```groovy
 repositories {
-	maven {
-		url 'https://dl.bintray.com/michaljonko/maven/'
-	}
+	jcenter()
 }
 
 dependencies {
@@ -25,7 +22,23 @@ dependencies {
 	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.14.0'
 }
 ```
+Maven
+```xml
+<repositories>
+    <repository>
+        <id>jcenter</id>
+        <name>jcenter</name>
+        <url>https://jcenter.bintray.com</url>
+    </repository>
+</repositories>
 
+<dependency>
+	<groupId>pl.coffeepower.log4j</groupId>
+	<artifactId>dynatrace-log4j2-appender</artifactId>
+	<version>0.0.1</version>
+	<type>pom</type>
+</dependency>
+```
 ### Example
 log4j2.xml
 ```xml

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+		<DynatraceGenericLogIngestAppender name="myAppender"
+										   activeGateUrl="${sys:activegateurl}"
+										   token="${sys:activegatetoken}"
+										   sslValidation="false">
+			<Property name="service.name">Log4j2 Appender Test</Property>
+			<Property name="dt.os.type">${java:os}</Property>
+		</DynatraceGenericLogIngestAppender>
+		<Console name="console" target="SYSTEM_OUT"/>
+	</Appenders>
+	<Loggers>
+		<Root level="debug">
+			<AppenderRef ref="console"/>
+			<AppenderRef ref="myAppender"/>
+		</Root>
+	</Loggers>
+</Configuration>

@@ -1,5 +1,6 @@
 package pl.coffeepower.log4j.appender.dynatrace;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.apache.logging.log4j.util.Strings.dquote;
@@ -34,19 +35,20 @@ public final class DynatraceGenericLogIngestAppender
 		extends AbstractAppender {
 
 	private static final FixedDateFormat DATE_FORMAT = FixedDateFormat.create(FixedDateFormat.FixedFormat.ISO8601_PERIOD);
+	private static final String PACKAGE = DynatraceGenericLogIngestAppender.class.getPackage().getName();
 
-	private final DynatraceGenericLogIngestManager manager;
+	private final AbstractDynatraceGenericLogIngestManager manager;
 	private final StrSubstitutor strSubstitutor;
 	private final Map<String, Property> attributes;
 
-	private DynatraceGenericLogIngestAppender(String name,
+	DynatraceGenericLogIngestAppender(String name,
 			Layout<? extends Serializable> layout,
 			Filter filter,
 			StrSubstitutor strSubstitutor,
 			boolean ignoreExceptions,
 			Property[] properties,
-			DynatraceGenericLogIngestManager manager) {
-		super(name, filter, layout, ignoreExceptions, properties);
+			AbstractDynatraceGenericLogIngestManager manager) {
+		super(name, filter, requireNonNull(layout, "layout is null"), ignoreExceptions, properties);
 
 		this.manager = requireNonNull(manager, "manager is null");
 		this.strSubstitutor = requireNonNull(strSubstitutor, "strSubstitutor is null");
@@ -63,8 +65,12 @@ public final class DynatraceGenericLogIngestAppender
 
 	@Override
 	public void append(LogEvent event) {
+		if (isNull(event)) {
+			return;
+		}
+
 		String loggerName = event.getLoggerName();
-		if (nonNull(loggerName) && loggerName.startsWith("pl.coffeepower.log4j")) {
+		if (nonNull(loggerName) && loggerName.startsWith(PACKAGE)) {
 			LOGGER.warn("Recursive logging from [{}] for appender [{}].", event.getLoggerName(), getName());
 			return;
 		}
@@ -105,7 +111,8 @@ public final class DynatraceGenericLogIngestAppender
 	}
 
 	@Override
-	public boolean stop(long timeout, TimeUnit timeUnit) {
+	public boolean stop(long timeout,
+			TimeUnit timeUnit) {
 		return super.stop(timeout, timeUnit) && manager.stop(timeout, timeUnit);
 	}
 
@@ -156,7 +163,10 @@ public final class DynatraceGenericLogIngestAppender
 		@Override
 		public DynatraceGenericLogIngestAppender build() {
 			final ManagerConfig managerConfig =
-					new ManagerConfig(getConfiguration().getLoggerContext(), getActiveGateUrl(), getToken(), isSslValidation());
+					new ManagerConfig(requireNonNull(getConfiguration(), "configuration is null").getLoggerContext(),
+							getActiveGateUrl(),
+							getToken(),
+							isSslValidation());
 
 			final DynatraceGenericLogIngestManager manager = getManager(getName(), managerConfig);
 

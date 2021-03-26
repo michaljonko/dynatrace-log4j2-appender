@@ -102,7 +102,6 @@ dependencies {
 	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
 	annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
 
-
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.7.1'
 	testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.28.2'
 	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '2.28.2'

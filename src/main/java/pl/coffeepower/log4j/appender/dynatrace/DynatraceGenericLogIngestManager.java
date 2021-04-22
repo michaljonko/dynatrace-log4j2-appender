@@ -124,7 +124,7 @@ final class DynatraceGenericLogIngestManager
 		}
 
 		int statusCode = statusLine.getStatusCode();
-		boolean success = statusCode == HttpStatus.SC_OK;
+		boolean success = (statusCode == HttpStatus.SC_OK) || (statusCode == HttpStatus.SC_NO_CONTENT);
 
 		if (!success) {
 			logWarn("ActiveGate rejected request.",

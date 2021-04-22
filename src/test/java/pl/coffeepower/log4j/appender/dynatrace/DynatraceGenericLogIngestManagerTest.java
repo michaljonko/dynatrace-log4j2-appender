@@ -36,6 +36,7 @@ import pl.coffeepower.log4j.appender.dynatrace.DynatraceGenericLogIngestManager.
 class DynatraceGenericLogIngestManagerTest {
 
 	private static final String TOKEN = "123456";
+	private static final int[] SUCCESS_STATUS_CODES = { HttpStatus.SC_OK, HttpStatus.SC_NO_CONTENT };
 	@Mock
 	private LoggerContext loggerContext;
 	private WireMockServer mockServer;
@@ -53,7 +54,7 @@ class DynatraceGenericLogIngestManagerTest {
 						.withHeader("Content-Type", new EqualToPattern(APPLICATION_JSON.withCharset(UTF_8).toString()))
 						.willReturn(aResponse()
 								.withFixedDelay(1)
-								.withStatus(HttpStatus.SC_OK))
+								.withStatus(SUCCESS_STATUS_CODES[(int) (System.currentTimeMillis() % SUCCESS_STATUS_CODES.length)]))
 		);
 		mockServer.stubFor(
 				post("/ingest-timeout")

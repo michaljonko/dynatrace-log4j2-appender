@@ -1,6 +1,9 @@
 package pl.coffeepower;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.logging.log4j.ThreadContext;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,6 +22,7 @@ final class SimpleLogGenerator implements AutoCloseable {
 	private final AtomicInteger atomicNumber;
 
 	SimpleLogGenerator(@NonNull String text) {
+		ThreadContext.put("trace_id", UUID.randomUUID().toString());
 		log.info("Creating SimpleApp");
 		this.text = text;
 		this.atomicNumber = new AtomicInteger();
@@ -38,5 +42,6 @@ final class SimpleLogGenerator implements AutoCloseable {
 	@Override
 	public void close() {
 		log.warn("Closing SimpleApp");
+		ThreadContext.clearMap();
 	}
 }

@@ -2,7 +2,7 @@ package pl.coffeepower.log4j.appender.dynatrace;
 
 import static org.apache.logging.log4j.core.config.Property.createProperty;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -33,15 +33,18 @@ class DynatraceGenericLogIngestAppenderTest {
 
 	@ParameterizedTest
 	@MethodSource("sourceForNullPointer")
-	void throwNullPointerExceptionForNullParams(final String name,
+	void throwExceptionForIncorrectParams(final String name,
 			final Layout layout,
 			final StrSubstitutor substitutor,
 			final AbstractDynatraceGenericLogIngestManager manager,
+			final Property[] properties,
+			final Class<? extends Throwable> expectedExceptionType,
 			final String expectedMessage) {
 		final Filter filter = mock(Filter.class);
 
-		assertThatNullPointerException()
-				.isThrownBy(() -> new DynatraceGenericLogIngestAppender(name, layout, filter, substitutor, false, null, manager))
+		assertThatExceptionOfType(expectedExceptionType)
+				.isThrownBy(() ->
+						new DynatraceGenericLogIngestAppender(name, layout, filter, substitutor, false, properties, manager))
 				.withMessage(expectedMessage);
 	}
 
@@ -51,10 +54,13 @@ class DynatraceGenericLogIngestAppenderTest {
 		AbstractDynatraceGenericLogIngestManager manager = mock(AbstractDynatraceGenericLogIngestManager.class);
 
 		return Stream.of(
-				Arguments.of(null, layout, substitutor, manager, "name"),
-				Arguments.of("name", null, substitutor, manager, "layout is null"),
-				Arguments.of("name", layout, null, manager, "strSubstitutor is null"),
-				Arguments.of("name", layout, substitutor, null, "manager is null")
+				Arguments.of(null, layout, substitutor, manager, null, NullPointerException.class, "name"),
+				Arguments.of("name", null, substitutor, manager, null, NullPointerException.class, "layout is null"),
+				Arguments.of("name", layout, null, manager, null, NullPointerException.class, "strSubstitutor is null"),
+				Arguments.of("name", layout, substitutor, null, null, NullPointerException.class, "manager is null"),
+				Arguments.of("name", layout, substitutor, manager,
+						new Property[] { createProperty("p1", "v1"), createProperty("p2", "v2"), createProperty("p1", "v") },
+						IllegalArgumentException.class, "property with the same name defined")
 		);
 	}
 
@@ -146,11 +152,6 @@ class DynatraceGenericLogIngestAppenderTest {
 						"simple message",
 						new Property[] { createProperty("p1", "v1"), createProperty("p2", "v2") },
 						"{\"timestamp\":\"2021-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"p1\":\"v1\",\"p2\":\"v2\",\"message\":\"simple message\"}"
-				),
-				Arguments.of(
-						"simple message",
-						new Property[] { createProperty("p1", "v1"), createProperty("p2", "v2"), createProperty("p1", "v") },
-						"{\"timestamp\":\"2021-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"p1\":\"v\",\"p2\":\"v2\",\"message\":\"simple message\"}"
 				),
 				Arguments.of(
 						"simple message",

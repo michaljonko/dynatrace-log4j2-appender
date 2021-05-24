@@ -6,11 +6,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import com.google.common.collect.ImmutableList;
 
 class DynatraceLookupTest {
 
@@ -18,7 +19,7 @@ class DynatraceLookupTest {
 	void readMetadata(@TempDir Path path) throws IOException {
 		Path metadataPath = Files.write(
 				path.resolve("metadata.properties"),
-				Arrays.asList("pgi=1234", "hostid=host1", "pg="),
+				ImmutableList.of("pgi=1234", "hostid=host1", "pg="),
 				StandardOpenOption.CREATE);
 
 		DynatraceLookup lookup = new DynatraceLookup(

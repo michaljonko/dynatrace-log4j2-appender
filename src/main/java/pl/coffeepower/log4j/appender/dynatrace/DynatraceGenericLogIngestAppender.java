@@ -1,18 +1,23 @@
 package pl.coffeepower.log4j.appender.dynatrace;
 
+import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.logging.log4j.util.Strings.dquote;
 import static pl.coffeepower.log4j.appender.dynatrace.DynatraceGenericLogIngestManager.ManagerConfig;
 import static pl.coffeepower.log4j.appender.dynatrace.DynatraceGenericLogIngestManager.getManager;
 
 import java.io.Serializable;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
@@ -39,7 +44,7 @@ public final class DynatraceGenericLogIngestAppender
 
 	private final AbstractDynatraceGenericLogIngestManager manager;
 	private final StrSubstitutor strSubstitutor;
-	private final Map<String, Property> attributes;
+	private final Set<DynatraceGenericLogIngestAttribute> attributes;
 
 	DynatraceGenericLogIngestAppender(String name,
 			Layout<? extends Serializable> layout,
@@ -54,12 +59,20 @@ public final class DynatraceGenericLogIngestAppender
 		this.strSubstitutor = requireNonNull(strSubstitutor, "strSubstitutor is null");
 
 		if (nonNull(properties) && properties.length > 0) {
-			this.attributes = new HashMap<>(properties.length);
-			for (Property property : properties) {
-				this.attributes.put(property.getName(), property);
+			long distinctPropertyNames = Arrays.stream(properties)
+					.map(Property::getName)
+					.distinct()
+					.count();
+
+			if (distinctPropertyNames != properties.length) {
+				throw new IllegalArgumentException("property with the same name defined");
 			}
+
+			this.attributes = Arrays.stream(properties)
+					.map(p -> new DynatraceGenericLogIngestAttribute(p.getName(), p.getValue(), p.isValueNeedsLookup()))
+					.collect(collectingAndThen(Collectors.toCollection(LinkedHashSet::new), Collections::unmodifiableSet));
 		} else {
-			this.attributes = Collections.emptyMap();
+			this.attributes = emptySet();
 		}
 	}
 
@@ -71,7 +84,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		String loggerName = event.getLoggerName();
 		if (nonNull(loggerName) && loggerName.startsWith(PACKAGE)) {
-			LOGGER.warn("Recursive logging from [{}] for appender [{}].", event.getLoggerName(), getName());
+			getStatusLogger().warn("Recursive logging from [{}] for appender [{}].", event.getLoggerName(), getName());
 			return;
 		}
 
@@ -87,19 +100,19 @@ public final class DynatraceGenericLogIngestAppender
 			message = layout.toByteArray(event);
 		}
 
-		StringBuilder jsonBuilder = new StringBuilder()
+		final StringBuilder jsonBuilder = new StringBuilder()
 				.append("{")
 				.append(dquote("timestamp")).append(":").append(dquote(DATE_FORMAT.formatInstant(event.getInstant())))
 				.append(",")
 				.append(dquote("level")).append(":").append(dquote(event.getLevel().name())).append(",");
 
-		for (Property attribute : attributes.values()) {
-			String attrKey = attribute.getName();
-			String attrValue = attribute.isValueNeedsLookup()
-					? strSubstitutor.replace(event, attribute.getValue())
-					: attribute.getValue();
-			jsonBuilder.append(dquote(attrKey)).append(":\"");
-			JsonUtils.quoteAsString(attrValue, jsonBuilder);
+		for (DynatraceGenericLogIngestAttribute attribute : attributes) {
+			String name = attribute.getName();
+			String value =
+					attribute.valueNeedsLookup() ? strSubstitutor.replace(event, attribute.getValue()) : attribute.getValue();
+
+			jsonBuilder.append(dquote(name)).append(":\"");
+			JsonUtils.quoteAsString(value, jsonBuilder);
 			jsonBuilder.append("\",");
 		}
 
@@ -107,7 +120,10 @@ public final class DynatraceGenericLogIngestAppender
 		JsonUtils.quoteAsString(new String(message), jsonBuilder);
 		jsonBuilder.append("\"}");
 
-		manager.send(jsonBuilder.toString());
+		String jsonMessage = jsonBuilder.toString();
+		if (manager.send(jsonMessage) != AbstractDynatraceGenericLogIngestManager.Status.SUCCESS) {
+			getStatusLogger().warn("Cannot send log event {}", jsonMessage);
+		}
 	}
 
 	@Override

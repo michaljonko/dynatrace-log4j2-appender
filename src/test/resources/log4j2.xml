@@ -7,6 +7,7 @@
 										   sslValidation="false">
 			<Property name="service.name">Log4j2 Appender Test</Property>
 			<Property name="dt.os.type">${java:os}</Property>
+			<Property name="dt.trace_id">${otel:trace_id}</Property>
 		</DynatraceGenericLogIngestAppender>
 		<Console name="console" target="SYSTEM_OUT"/>
 	</Appenders>

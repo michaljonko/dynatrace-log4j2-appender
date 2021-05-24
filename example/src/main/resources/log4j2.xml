@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+		<DynatraceGenericLogIngestAppender name="dynatraceAppeder"
+										   activeGateUrl="${env:activegateurl}"
+										   token="${env:activegatetoken}"
+										   sslValidation="false">
+			<Property name="service.name">Simple Logs Generator</Property>
+			<Property name="dt.os.type">${java:os}</Property>
+			<Property name="dt.entity.process_group_instance">${dt:dt.entity.process_group_instance}</Property>
+			<Property name="dt.entity.host">${dt:dt.entity.host}</Property>
+			<Property name="dt.http.application_id">${otel:trace_id}</Property>
+			<PatternLayout pattern="[%t] [%X{trace_id}] %logger - %msg"/>
+		</DynatraceGenericLogIngestAppender>
+		<Console name="console" target="SYSTEM_OUT">
+			<PatternLayout pattern="[%t] [%X{trace_id}] %logger - %msg%n"/>
+		</Console>
+	</Appenders>
+	<Loggers>
+		<Root level="debug">
+			<AppenderRef ref="console"/>
+			<AppenderRef ref="dynatraceAppeder"/>
+		</Root>
+	</Loggers>
+</Configuration>

@@ -167,6 +167,7 @@ local.properties
 ### Gradle template
 .gradle
 /build/
+/example/build/
 
 # Ignore Gradle GUI config
 gradle-app.setting

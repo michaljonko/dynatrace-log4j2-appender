@@ -1,5 +1,6 @@
 package pl.coffeepower.log4j.appender.dynatrace;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toMap;
@@ -20,7 +21,7 @@ import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.logging.log4j.util.Strings;
 
-@Plugin(name = "dynatrace", category = StrLookup.CATEGORY)
+@Plugin(name = "dt", category = StrLookup.CATEGORY)
 public final class DynatraceLookup extends AbstractLookup {
 
 	private static final Logger LOGGER = StatusLogger.getLogger();
@@ -32,12 +33,12 @@ public final class DynatraceLookup extends AbstractLookup {
 	}
 
 	DynatraceLookup(Path magicFilePath) {
-		Map<String, String> tempMetadata = Collections.emptyMap();
+		Map<String, String> tempMetadata = emptyMap();
 		try (Stream<String> linesWithPath = Files.lines(requireNonNull(magicFilePath, "magicFilePath is null"))) {
 			tempMetadata = linesWithPath.findFirst()
 					.map(Paths::get)
 					.map(DynatraceLookup::readMetadataFile)
-					.orElse(Collections.emptyMap());
+					.orElse(emptyMap());
 		} catch (IOException e) {
 			LOGGER.error("DynatraceLookup cannot read metadata (magic file {})", magicFilePath);
 		}
@@ -58,7 +59,7 @@ public final class DynatraceLookup extends AbstractLookup {
 
 		} catch (IOException e) {
 			LOGGER.error("DynatraceLookup cannot read metadata (metadata file {})", path);
-			return Collections.emptyMap();
+			return emptyMap();
 		}
 	}
 

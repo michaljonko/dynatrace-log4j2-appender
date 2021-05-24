@@ -1,6 +1,11 @@
 # Changelog
 ---
 
+### 0.0.6
+	- Added integration with [OpenTelemetry Instrumentation for Java](https://github.com/open-telemetry/opentelemetry-java-instrumentation)
+	- Added example app
+	- Changed prefix for DynatraceLookup  
+
 ### 0.0.5
 	- Used new HTTP status code (204) 
 

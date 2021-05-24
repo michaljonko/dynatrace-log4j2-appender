@@ -108,6 +108,7 @@ dependencies {
 	testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.17.2'
 	testImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '2.27.2'
 	testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
+	testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.0.3'
 	testCompileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
 	testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
 	testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.18'

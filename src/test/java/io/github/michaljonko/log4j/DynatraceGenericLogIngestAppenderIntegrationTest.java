@@ -1,4 +1,4 @@
-package pl.coffeepower;
+package io.github.michaljonko.log4j;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;

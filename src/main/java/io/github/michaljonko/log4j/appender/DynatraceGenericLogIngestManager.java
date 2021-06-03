@@ -1,4 +1,4 @@
-package pl.coffeepower.log4j.appender.dynatrace;
+package io.github.michaljonko.log4j.appender;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;

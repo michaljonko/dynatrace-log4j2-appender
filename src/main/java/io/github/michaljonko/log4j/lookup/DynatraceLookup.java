@@ -1,4 +1,4 @@
-package pl.coffeepower.log4j.appender.dynatrace;
+package io.github.michaljonko.log4j.lookup;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
@@ -21,6 +21,9 @@ import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.logging.log4j.util.Strings;
 
+/**
+ * Dynatrace Lookup used to get extra data exported by OneAgent.
+ */
 @Plugin(name = "dt", category = StrLookup.CATEGORY)
 public final class DynatraceLookup extends AbstractLookup {
 
@@ -28,6 +31,9 @@ public final class DynatraceLookup extends AbstractLookup {
 	private static final Path MAGIC_FILE_PATH = Paths.get("dt_metadata_e617c525669e072eebe3d0f08212e8f2.properties");
 	private final Map<String, String> metadata;
 
+	/**
+	 * Default constructor.
+	 */
 	public DynatraceLookup() {
 		this(MAGIC_FILE_PATH);
 	}

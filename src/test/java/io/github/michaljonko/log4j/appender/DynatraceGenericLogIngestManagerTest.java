@@ -1,4 +1,4 @@
-package pl.coffeepower.log4j.appender.dynatrace;
+package io.github.michaljonko.log4j.appender;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -6,7 +6,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static pl.coffeepower.log4j.appender.dynatrace.AbstractDynatraceGenericLogIngestManager.Status;
+import static io.github.michaljonko.log4j.appender.AbstractDynatraceGenericLogIngestManager.Status;
 
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +30,8 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.ContainsPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 
-import pl.coffeepower.log4j.appender.dynatrace.DynatraceGenericLogIngestManager.ManagerConfig;
+import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager;
+import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.ManagerConfig;
 
 @ExtendWith(MockitoExtension.class)
 class DynatraceGenericLogIngestManagerTest {

@@ -1,4 +1,4 @@
-package pl.coffeepower.log4j.appender.dynatrace;
+package io.github.michaljonko.log4j.lookup;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import com.google.common.collect.ImmutableList;
+
+import io.github.michaljonko.log4j.lookup.DynatraceLookup;
 
 class DynatraceLookupTest {
 

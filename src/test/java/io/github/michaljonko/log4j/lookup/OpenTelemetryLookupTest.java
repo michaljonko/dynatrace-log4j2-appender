@@ -1,4 +1,4 @@
-package pl.coffeepower.log4j.appender.dynatrace;
+package io.github.michaljonko.log4j.lookup;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import io.github.michaljonko.log4j.lookup.OpenTelemetryLookup;
 
 @ExtendWith(MockitoExtension.class)
 class OpenTelemetryLookupTest {

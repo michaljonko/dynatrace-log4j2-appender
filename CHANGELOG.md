@@ -1,6 +1,10 @@
 # Changelog
 ---
 
+### 0.0.7
+    - Changed groupId and packages to io.github.michaljonko
+    - Added gradle configuration to make MavenCentral deployment available
+
 ### 0.0.6
 	- Added integration with [OpenTelemetry Instrumentation for Java](https://github.com/open-telemetry/opentelemetry-java-instrumentation)
 	- Added example app

@@ -1,4 +1,4 @@
-package pl.coffeepower.log4j.example;
+package io.github.michaljonko.log4j.example;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

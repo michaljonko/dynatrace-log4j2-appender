@@ -10,7 +10,7 @@ plugins {
 	id 'com.github.johnrengelman.shadow' version '5.2.0'
 	id 'maven'
 	id 'maven-publish'
-	id 'com.jfrog.bintray' version '1.8.5'
+	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
 	id 'signing'
 }
 
@@ -19,7 +19,7 @@ wrapper {
 	distributionType = Wrapper.DistributionType.BIN
 }
 
-def appGroup = 'pl.coffeepower.log4j'
+def appGroup = 'io.github.michaljonko'
 def appName = 'dynatrace-log4j2-appender'
 def appVersion = Files.readAllLines(rootDir.toPath().resolve('version.txt'), Charset.forName('UTF-8'))
 		.first()
@@ -53,45 +53,64 @@ jar {
 	}
 }
 
+signing {
+	sign publishing.publications
+}
+
 task sourcesJar(type: Jar, dependsOn: classes) {
 	classifier = 'sources'
 	from sourceSets.main.allSource
 }
 
+task javadocJar(type: Jar) {
+	classifier = 'javadoc'
+	from javadoc
+}
+
 publishing {
 	publications {
-		DynatraceGenericLogIngestAppender(MavenPublication) {
+		mavenJava(MavenPublication) {
 			from components.java
 			groupId appGroup
 			artifactId appName
 			version appVersion
-			artifacts = [jar, sourcesJar]
+			artifacts = [jar, sourcesJar, javadocJar]
+
+			pom {
+				name = appName
+				description = appDesc
+				url = 'https://michaljonko.github.io/dynatrace-log4j2-appender/'
+				licenses {
+					license {
+						name = 'Apache-2.0'
+						url = 'https://raw.githubusercontent.com/michaljonko/dynatrace-log4j2-appender/master/LICENSE'
+					}
+				}
+				developers {
+					developer {
+						id = 'michaljonko'
+						name = 'Michal Jonko'
+						email = 'michal.jonko@gmail.com'
+					}
+				}
+				scm {
+					connection = 'scm:git:github.com/michaljonko/dynatrace-log4j2-appender.git'
+					developerConnection = 'scm:git:ssh://github.com/michaljonko/dynatrace-log4j2-appender.git'
+					url = 'https://github.com/michaljonko/dynatrace-log4j2-appender'
+				}
+			}
 		}
 	}
 }
 
-bintray {
-	user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-	key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-	publications = ['DynatraceGenericLogIngestAppender']
-	publish = true
-	pkg {
-		repo = 'maven'
-		name = appName
-		desc = appDesc
-		licenses = ['Apache-2.0']
-		vcsUrl = 'https://github.com/michaljonko/dynatrace-log4j2-appender.git'
-		issueTrackerUrl = 'https://github.com/michaljonko/dynatrace-log4j2-appender/issues'
-		websiteUrl = 'https://github.com/michaljonko/dynatrace-log4j2-appender'
-		githubRepo = 'michaljonko/dynatrace-log4j2-appender'
-		githubReleaseNotesFile = 'README.md'
-		labels = ['log4j2', 'dynatrace', 'generic log ingest', 'observability', 'logs']
-		publicDownloadNumbers = true
-		version {
-			name = appVersion
-			desc = 'Dynatrace Generic Log Ingest Log4j2 Appender'
-			released = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date())
-			vcsTag = appVersion
+nexusPublishing {
+	repositories {
+		sonatype {
+			nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+			snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+			username = project.findProperty('sonatypeUsername') ?: System.getenv("SONATYPE_USER")
+			password = project.findProperty('sonatypePassword') ?: System.getenv("SONATYPE_PASSWORD")
+			stagingProfileId = project.findProperty('sonatypeStagingProfileId') ?: System.getenv("SONATYPE_STAGING_PROFILE_ID")
 		}
 	}
 }

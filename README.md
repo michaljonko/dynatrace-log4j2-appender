@@ -2,7 +2,7 @@
 # Dynatrace Generic Log Ingest Log4j2 Appender
 Log4j2 Appender & Lookup to integrate Java applications with _Dynatrace Generic Log Ingest_ functionality.
 
-Last stable version: _0.0.6_
+Last stable version: _0.0.7_
 
 To make it works you have to provide two parameters:
 - `activeGateUrl` - URL to ActiveGate instance with Generic Log Ingest module enabled
@@ -36,31 +36,23 @@ Lookup attribute | Configuration | Description
 Gradle
 ```groovy
 repositories {
-	jcenter()
+	mavenCentral()
 }
 
 dependencies {
 	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
 	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
 
-	runtimeOnly group: 'pl.coffeepower.log4j', name: 'dynatrace-log4j2-appender', version: '0.0.5'
+	runtimeOnly group: 'io.github.michaljonko', name: 'dynatrace-log4j2-appender', version: '0.0.7'
 	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.14.0'
 }
 ```
 Maven
 ```xml
-<repositories>
-    <repository>
-        <id>jcenter</id>
-        <name>jcenter</name>
-        <url>https://jcenter.bintray.com</url>
-    </repository>
-</repositories>
-
 <dependency>
-	<groupId>pl.coffeepower.log4j</groupId>
+	<groupId>io.github.michaljonko</groupId>
 	<artifactId>dynatrace-log4j2-appender</artifactId>
-	<version>0.0.5</version>
+	<version>0.0.7</version>
 	<type>pom</type>
 </dependency>
 ```

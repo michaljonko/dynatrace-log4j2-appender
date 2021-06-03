@@ -1,4 +1,4 @@
-package pl.coffeepower;
+package io.github.michaljonko.log4j;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;

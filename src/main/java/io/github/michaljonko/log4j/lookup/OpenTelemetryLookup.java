@@ -1,4 +1,4 @@
-package pl.coffeepower.log4j.appender.dynatrace;
+package io.github.michaljonko.log4j.lookup;
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
@@ -14,6 +14,9 @@ import org.apache.logging.log4j.core.lookup.AbstractLookup;
 import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
+/**
+ * OpenTelemetry Lookup to get extra data from OpenTelemetry Instrumentation for Java Agent.
+ */
 @Plugin(name = "otel", category = StrLookup.CATEGORY)
 public final class OpenTelemetryLookup extends AbstractLookup {
 
@@ -25,6 +28,9 @@ public final class OpenTelemetryLookup extends AbstractLookup {
 
 	private final Function<LogEvent, ReadOnlyStringMap> contextDataExtractor;
 
+	/**
+	 * Default constructor.
+	 */
 	public OpenTelemetryLookup() {
 		this(LogEvent::getContextData);
 	}

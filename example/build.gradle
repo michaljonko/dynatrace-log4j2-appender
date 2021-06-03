@@ -24,7 +24,7 @@ repositories {
 }
 
 application {
-	mainClassName = 'pl.coffeepower.log4j.example.SimpleLogsGeneratorApp'
+	mainClassName = 'io.github.michaljonko.log4j.example.SimpleLogsGeneratorApp'
 }
 
 applicationAgent {
@@ -51,7 +51,7 @@ dependencies {
 
 	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
 	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
-	runtimeOnly group: 'pl.coffeepower.log4j', name: 'dynatrace-log4j2-appender', version: '0.0.+'
+	runtimeOnly group: 'io.github.michaljonko', name: 'dynatrace-log4j2-appender', version: '0.0.+'
 
 	agent group: 'io.opentelemetry.javaagent', name: 'opentelemetry-javaagent', version: '1.2.0'
 }

@@ -182,3 +182,5 @@ gradle-app.setting
 # gradle/wrapper/gradle-wrapper.properties
 /gradle.properties
 /.idea
+/private-key.gpg
+/public.key

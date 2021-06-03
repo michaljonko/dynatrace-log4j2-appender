@@ -1,14 +1,13 @@
-package pl.coffeepower.log4j.appender.dynatrace;
+package io.github.michaljonko.log4j.appender;
 
+import static io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.ManagerConfig;
+import static io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.getManager;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toSet;
 import static org.apache.logging.log4j.util.Strings.dquote;
-import static pl.coffeepower.log4j.appender.dynatrace.DynatraceGenericLogIngestManager.ManagerConfig;
-import static pl.coffeepower.log4j.appender.dynatrace.DynatraceGenericLogIngestManager.getManager;
 
 import java.io.Serializable;
 import java.net.URL;
@@ -35,6 +34,9 @@ import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.apache.logging.log4j.core.util.JsonUtils;
 import org.apache.logging.log4j.core.util.datetime.FixedDateFormat;
 
+/**
+ * Log4J2 appender to make Java applications logging on Dynatrace easy.
+ */
 @Plugin(name = "DynatraceGenericLogIngestAppender", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE, printObject = true)
 public final class DynatraceGenericLogIngestAppender
 		extends AbstractAppender {
@@ -132,11 +134,20 @@ public final class DynatraceGenericLogIngestAppender
 		return super.stop(timeout, timeUnit) && manager.stop(timeout, timeUnit);
 	}
 
+	/**
+	 * Builder factory method.
+	 * @param <B> type
+	 * @return new instance of the Builder
+	 */
 	@PluginBuilderFactory
 	public static <B extends Builder<B>> B createBuilder() {
 		return new Builder<B>().asBuilder();
 	}
 
+	/**
+	 * Builder for {@link io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestAppender}.
+	 * @param <B> DynatraceGenericLogIngestAppender
+	 */
 	public static final class Builder<B extends Builder<B>>
 			extends org.apache.logging.log4j.core.appender.AbstractAppender.Builder<B>
 			implements org.apache.logging.log4j.core.util.Builder<DynatraceGenericLogIngestAppender> {
@@ -149,28 +160,55 @@ public final class DynatraceGenericLogIngestAppender
 		@PluginAttribute(value = "sslValidation", defaultBoolean = true)
 		private boolean sslValidation;
 
+		/**
+		 * Get Active Gate URL.
+		 * @return URL
+		 */
 		public URL getActiveGateUrl() {
 			return activeGateUrl;
 		}
 
+		/**
+		 * Set Active Gate URL.
+		 * @param activeGateUrl valid url
+		 * @return this
+		 */
 		public B setActiveGateUrl(URL activeGateUrl) {
 			this.activeGateUrl = activeGateUrl;
 			return asBuilder();
 		}
 
+		/**
+		 * Get Token used for authentication on Active Gate.
+		 * @return token
+		 */
 		public String getToken() {
 			return token;
 		}
 
+		/**
+		 * Set Token for authentication on Active Gate. It has to be token with Log Ingest permission.
+		 * @param token valid token
+		 * @return this
+		 */
 		public B setToken(String token) {
 			this.token = token;
 			return asBuilder();
 		}
 
+		/**
+		 * Should validate SSL connection.
+		 * @return true if will valid
+		 */
 		public boolean isSslValidation() {
 			return sslValidation;
 		}
 
+		/**
+		 * Set SSL validation flag.
+		 * @param sslValidation true - will valid, false - skip validation
+		 * @return this
+		 */
 		public B setSslValidation(boolean sslValidation) {
 			this.sslValidation = sslValidation;
 			return asBuilder();

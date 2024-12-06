@@ -1,51 +1,76 @@
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.text.SimpleDateFormat
-
 plugins {
 	id 'java'
 	id 'idea'
 	id 'eclipse'
-
-	id 'com.github.johnrengelman.shadow' version '5.2.0'
-	id 'maven'
+	id 'com.github.johnrengelman.shadow' version '8.1.1'
 	id 'maven-publish'
-	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 	id 'signing'
 }
 
 wrapper {
-	gradleVersion = '5.6.4'
+	gradleVersion = '8.5'
 	distributionType = Wrapper.DistributionType.BIN
 }
 
 def appGroup = 'io.github.michaljonko'
 def appName = 'dynatrace-log4j2-appender'
-def appVersion = Files.readAllLines(rootDir.toPath().resolve('version.txt'), Charset.forName('UTF-8'))
-		.first()
-		.trim()
+def appVersion = file('version.txt').text.trim()
 def appDesc = 'Log4j2 Appender for Dynatrace Generic Log Ingest'
-
-defaultTasks 'clean', 'build', 'test'
 
 group = appGroup
 version = appVersion
 description = appDesc
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-compileJava.options.encoding = 'UTF-8'
-compileTestJava.options.encoding = 'UTF-8'
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+	withJavadocJar()
+	withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+}
 
 repositories {
 	mavenCentral()
-	jcenter()
+}
+
+ext {
+    log4jVersion = '2.17.1'
+    httpClientVersion = '4.5.14'
+    junitVersion = '5.10.0'
+    mockitoVersion = '5.6.0'
+    assertjVersion = '3.24.2'
+    wiremockVersion = '3.9.1'
+    awaitilityVersion = '4.2.0'
+    lombokVersion = '1.18.30'
+}
+
+dependencies {
+    compileOnly "org.apache.logging.log4j:log4j-api:$log4jVersion"
+    compileOnly "org.apache.logging.log4j:log4j-core:$log4jVersion"
+    implementation "org.apache.httpcomponents:httpclient:$httpClientVersion"
+    annotationProcessor "org.apache.logging.log4j:log4j-core:$log4jVersion"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation "org.mockito:mockito-junit-jupiter:$mockitoVersion"
+    testImplementation "org.assertj:assertj-core:$assertjVersion"
+    testImplementation "org.wiremock:wiremock:$wiremockVersion"
+    testImplementation "org.apache.logging.log4j:log4j-core:$log4jVersion"
+    testImplementation "org.awaitility:awaitility:$awaitilityVersion"
+    testCompileOnly "org.apache.logging.log4j:log4j-api:$log4jVersion"
+    testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+    testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 }
 
 jar {
 	manifest {
 		attributes(
 				'Built-By': 'Michal Jonko',
-				'Build-Timestamp': new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+				'Build-Timestamp': java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME),
 				'Created-By': "Gradle ${gradle.gradleVersion}",
 				'Build-Jdk': "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
 				'Build-OS': "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
@@ -57,24 +82,13 @@ signing {
 	sign publishing.publications
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = 'sources'
-	from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar) {
-	classifier = 'javadoc'
-	from javadoc
-}
-
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			from components.java
-			groupId appGroup
-			artifactId appName
-			version appVersion
-			artifacts = [jar, sourcesJar, javadocJar]
+			groupId = appGroup
+			artifactId = appName
+			version = appVersion
 
 			pom {
 				name = appName
@@ -108,29 +122,11 @@ nexusPublishing {
 		sonatype {
 			nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
 			snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-			username = project.findProperty('sonatypeUsername') ?: System.getenv("SONATYPE_USER")
-			password = project.findProperty('sonatypePassword') ?: System.getenv("SONATYPE_PASSWORD")
-			stagingProfileId = project.findProperty('sonatypeStagingProfileId') ?: System.getenv("SONATYPE_STAGING_PROFILE_ID")
+			username = findProperty('sonatypeUsername') ?: System.getenv("SONATYPE_USER")
+			password = findProperty('sonatypePassword') ?: System.getenv("SONATYPE_PASSWORD")
+			stagingProfileId = findProperty('sonatypeStagingProfileId') ?: System.getenv("SONATYPE_STAGING_PROFILE_ID")
 		}
 	}
-}
-
-dependencies {
-	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
-	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
-	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
-	annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
-
-	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.7.1'
-	testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.28.2'
-	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '2.28.2'
-	testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.17.2'
-	testImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '2.27.2'
-	testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
-	testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.0.3'
-	testCompileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
-	testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
-	testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
 }
 
 test {

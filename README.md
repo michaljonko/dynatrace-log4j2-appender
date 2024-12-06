@@ -40,11 +40,11 @@ repositories {
 }
 
 dependencies {
-	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
-	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
+	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.1'
+	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.1'
 
 	runtimeOnly group: 'io.github.michaljonko', name: 'dynatrace-log4j2-appender', version: '0.0.7'
-	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.14.0'
+	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.1'
 }
 ```
 Maven

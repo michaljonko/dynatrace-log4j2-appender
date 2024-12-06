@@ -80,7 +80,7 @@ class DynatraceGenericLogIngestAppenderTest {
 		appender.append(null);
 
 		then(manager)
-				.shouldHaveZeroInteractions();
+				.shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -100,7 +100,7 @@ class DynatraceGenericLogIngestAppenderTest {
 		appender.append(logEvent);
 
 		then(manager)
-				.shouldHaveZeroInteractions();
+				.shouldHaveNoInteractions();
 	}
 
 	@ParameterizedTest

@@ -1,24 +1,46 @@
 package io.github.michaljonko.log4j.appender;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-
-import java.net.URL;
-import java.util.stream.Stream;
-
 import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.AbstractConfiguration;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestAppender;
+import java.net.URL;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 class DynatraceGenericLogIngestAppenderBuilderTest {
+    /**
+     * @implNote needed, since parts of the log4j2 implementation require a proper {@link Configuration}, and fail with a plain mock.
+     */
+    static class MockConfiguration extends AbstractConfiguration {
+        private final boolean withoutStrSubstitutor;
+        final LoggerContext strongReferenceToKeepLoggerContext;
+
+        MockConfiguration(LoggerContext loggerContext, boolean withoutStrSubstitutor) {
+            super(loggerContext, ConfigurationSource.NULL_SOURCE);
+            this.withoutStrSubstitutor = withoutStrSubstitutor;
+            this.strongReferenceToKeepLoggerContext = loggerContext;
+        }
+
+        static MockConfiguration withMockLoggerContextWithoutStrSubstitutor() {
+            return new MockConfiguration(mock(LoggerContext.class), true);
+        }
+
+        @Override
+        public StrSubstitutor getStrSubstitutor() {
+            return withoutStrSubstitutor ? null : super.getStrSubstitutor();
+        }
+    }
 
 	@ParameterizedTest
 	@MethodSource("sourceForNullPointer")
@@ -40,21 +62,21 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 	private static Stream<Arguments> sourceForNullPointer() throws Exception {
 		return Stream.of(
 				Arguments.of(
-						given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+                        MockConfiguration.withMockLoggerContextWithoutStrSubstitutor(),
 						new URL("http://localhost"),
 						"token",
 						"name",
 						"strSubstitutor is null"
 				),
 				Arguments.of(
-						given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+                        given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
 						new URL("http://localhost"),
 						"token",
 						null,
 						"name is null"
 				),
 				Arguments.of(
-						given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+                        given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
 						new URL("http://localhost"),
 						null,
 						null,
@@ -86,17 +108,9 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 
 	@Test
 	void createAppender() throws Exception {
-		final Configuration configuration = mock(Configuration.class);
-		final LoggerContext loggerContext = mock(LoggerContext.class);
-		final StrSubstitutor strSubstitutor = mock(StrSubstitutor.class);
-
-		given(configuration.getLoggerContext())
-				.willReturn(loggerContext);
-		given(configuration.getStrSubstitutor())
-				.willReturn(strSubstitutor);
 
 		assertThat(DynatraceGenericLogIngestAppender.createBuilder()
-				.setConfiguration(configuration)
+				.setConfiguration(new MockConfiguration(mock(LoggerContext.class), false))
 				.setActiveGateUrl(new URL("http://localhost"))
 				.setToken("token")
 				.setName("name")

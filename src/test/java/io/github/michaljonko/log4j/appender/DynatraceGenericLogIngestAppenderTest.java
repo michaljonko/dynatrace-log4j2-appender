@@ -1,18 +1,5 @@
 package io.github.michaljonko.log4j.appender;
 
-import static org.apache.logging.log4j.core.config.Property.createProperty;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
-
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -27,8 +14,18 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.AdditionalAnswers;
 
-import io.github.michaljonko.log4j.appender.AbstractDynatraceGenericLogIngestManager;
-import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestAppender;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
+import static org.apache.logging.log4j.core.config.Property.createProperty;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 
 class DynatraceGenericLogIngestAppenderTest {
 
@@ -80,7 +77,7 @@ class DynatraceGenericLogIngestAppenderTest {
 		appender.append(null);
 
 		then(manager)
-				.shouldHaveZeroInteractions();
+				.shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -100,7 +97,7 @@ class DynatraceGenericLogIngestAppenderTest {
 		appender.append(logEvent);
 
 		then(manager)
-				.shouldHaveZeroInteractions();
+				.shouldHaveNoInteractions();
 	}
 
 	@ParameterizedTest

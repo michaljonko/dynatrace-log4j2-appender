@@ -11,10 +11,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.http.HttpStatus;
@@ -29,7 +27,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.ContainsPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import com.google.common.collect.Lists;
 
 class DynatraceGenericLogIngestAppenderIntegrationTest {
@@ -54,7 +51,7 @@ class DynatraceGenericLogIngestAppenderIntegrationTest {
 		);
 		SERVER.start();
 
-		Path tempConfigFile = Files.createTempFile("log4j", "test");
+		var tempConfigFile = Files.createTempFile("log4j", "test");
 		assertThat(
 				Files.copy(
 						CONFIG_RESOURCE.openStream(),
@@ -75,7 +72,7 @@ class DynatraceGenericLogIngestAppenderIntegrationTest {
 
 	@Test
 	void integrationCheck() {
-		try (SimpleLogGenerator app = new SimpleLogGenerator("Simple text")) {
+		try (var app = new SimpleLogGenerator("Simple text")) {
 			assertThat(app.getAtomicNumberValue())
 					.isZero();
 			app.setAtomicNumberValue(5);
@@ -89,7 +86,7 @@ class DynatraceGenericLogIngestAppenderIntegrationTest {
 					.timeout(Duration.ofSeconds(5L))
 					.until(() -> !SERVER.getServeEvents().getRequests().isEmpty());
 
-			List<ServeEvent> requests = SERVER.getServeEvents().getRequests();
+			var requests = SERVER.getServeEvents().getRequests();
 
 			assertThat(requests)
 					.hasSize(5)

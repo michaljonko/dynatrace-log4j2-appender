@@ -1,46 +1,24 @@
 package io.github.michaljonko.log4j.appender;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.mockito.Mockito.mock;
+
+import java.net.URL;
+import java.util.stream.Stream;
+
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.AbstractConfiguration;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.NullConfiguration;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.net.URL;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-
 class DynatraceGenericLogIngestAppenderBuilderTest {
-    /**
-     * @implNote needed, since parts of the log4j2 implementation require a proper {@link Configuration}, and fail with a plain mock.
-     */
-    static class MockConfiguration extends AbstractConfiguration {
-        private final boolean withoutStrSubstitutor;
-        final LoggerContext strongReferenceToKeepLoggerContext;
-
-        MockConfiguration(LoggerContext loggerContext, boolean withoutStrSubstitutor) {
-            super(loggerContext, ConfigurationSource.NULL_SOURCE);
-            this.withoutStrSubstitutor = withoutStrSubstitutor;
-            this.strongReferenceToKeepLoggerContext = loggerContext;
-        }
-
-        static MockConfiguration withMockLoggerContextWithoutStrSubstitutor() {
-            return new MockConfiguration(mock(LoggerContext.class), true);
-        }
-
-        @Override
-        public StrSubstitutor getStrSubstitutor() {
-            return withoutStrSubstitutor ? null : super.getStrSubstitutor();
-        }
-    }
 
 	@ParameterizedTest
 	@MethodSource("sourceForNullPointer")
@@ -62,35 +40,35 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 	private static Stream<Arguments> sourceForNullPointer() throws Exception {
 		return Stream.of(
 				Arguments.of(
-                        MockConfiguration.withMockLoggerContextWithoutStrSubstitutor(),
+						createConfigurationWithoutStrSubstitutor(),
 						new URL("http://localhost"),
 						"token",
 						"name",
 						"strSubstitutor is null"
 				),
 				Arguments.of(
-                        given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+						createConfiguration(),
 						new URL("http://localhost"),
 						"token",
 						null,
 						"name is null"
 				),
 				Arguments.of(
-                        given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+						createConfiguration(),
 						new URL("http://localhost"),
 						null,
 						null,
 						"token is null"
 				),
 				Arguments.of(
-						given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+						createConfiguration(),
 						null,
 						null,
 						null,
 						"activeGateUrl is null"
 				),
 				Arguments.of(
-						mock(Configuration.class),
+						new NullConfiguration(),
 						null,
 						null,
 						null,
@@ -106,11 +84,37 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 		);
 	}
 
+	private static Configuration createConfiguration() {
+		final var loggerContext = mock(LoggerContext.class);
+		return new AbstractConfiguration(loggerContext, ConfigurationSource.NULL_SOURCE) {
+
+			@Override
+			public LoggerContext getLoggerContext() {
+				return loggerContext;
+			}
+		};
+	}
+
+	private static Configuration createConfigurationWithoutStrSubstitutor() {
+		final var loggerContext = mock(LoggerContext.class);
+		return new AbstractConfiguration(loggerContext, ConfigurationSource.NULL_SOURCE) {
+
+			@Override
+			public LoggerContext getLoggerContext() {
+				return loggerContext;
+			}
+
+			@Override
+			public StrSubstitutor getStrSubstitutor() {
+				return null;
+			}
+		};
+	}
+
 	@Test
 	void createAppender() throws Exception {
-
 		assertThat(DynatraceGenericLogIngestAppender.createBuilder()
-				.setConfiguration(new MockConfiguration(mock(LoggerContext.class), false))
+				.setConfiguration(createConfiguration())
 				.setActiveGateUrl(new URL("http://localhost"))
 				.setToken("token")
 				.setName("name")

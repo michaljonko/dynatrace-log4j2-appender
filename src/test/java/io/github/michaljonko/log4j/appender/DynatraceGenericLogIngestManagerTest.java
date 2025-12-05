@@ -2,11 +2,11 @@ package io.github.michaljonko.log4j.appender;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static io.github.michaljonko.log4j.appender.AbstractDynatraceGenericLogIngestManager.Status;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static io.github.michaljonko.log4j.appender.AbstractDynatraceGenericLogIngestManager.Status;
 
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +30,6 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.ContainsPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 
-import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager;
 import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.ManagerConfig;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +54,8 @@ class DynatraceGenericLogIngestManagerTest {
 						.withHeader("Content-Type", new EqualToPattern(APPLICATION_JSON.withCharset(UTF_8).toString()))
 						.willReturn(aResponse()
 								.withFixedDelay(1)
-								.withStatus(SUCCESS_STATUS_CODES[(int) (System.currentTimeMillis() % SUCCESS_STATUS_CODES.length)]))
+								.withStatus(
+										SUCCESS_STATUS_CODES[(int) (System.currentTimeMillis() % SUCCESS_STATUS_CODES.length)]))
 		);
 		mockServer.stubFor(
 				post("/ingest-timeout")
@@ -76,16 +76,16 @@ class DynatraceGenericLogIngestManagerTest {
 
 	@Test
 	void returnExceptionWhenTimeoutOccurs() throws Exception {
-		final URL activeGateUrl = new URL(mockServer.url("/ingest-timeout"));
-		final ManagerConfig config = new ManagerConfig(
+		final var activeGateUrl = new URL(mockServer.url("/ingest-timeout"));
+		final var config = new ManagerConfig(
 				loggerContext,
 				activeGateUrl,
 				TOKEN,
 				false
 		);
-		final RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(10).build();
+		final var requestConfig = RequestConfig.custom().setSocketTimeout(10).build();
 
-		DynatraceGenericLogIngestManager manager = new DynatraceGenericLogIngestManager("manager", config, requestConfig);
+		var manager = new DynatraceGenericLogIngestManager("manager", config, requestConfig);
 
 		assertThat(manager.send("message"))
 				.isEqualTo(Status.EXCEPTION);
@@ -93,16 +93,16 @@ class DynatraceGenericLogIngestManagerTest {
 
 	@Test
 	void returnExceptionWhenCannotValidCert() throws Exception {
-		final URL activeGateUrl =
+		final var activeGateUrl =
 				new URL("https://" + mockServer.getOptions().bindAddress() + ":" + mockServer.httpsPort() + "/ingest");
-		final ManagerConfig config = new ManagerConfig(
+		final var config = new ManagerConfig(
 				loggerContext,
 				activeGateUrl,
 				TOKEN,
 				true
 		);
 
-		DynatraceGenericLogIngestManager manager = new DynatraceGenericLogIngestManager("manager", config);
+		var manager = new DynatraceGenericLogIngestManager("manager", config);
 
 		assertThat(manager.send("message"))
 				.isEqualTo(Status.EXCEPTION);
@@ -110,15 +110,15 @@ class DynatraceGenericLogIngestManagerTest {
 
 	@Test
 	void createAndReleaseManager() throws Exception {
-		final URL activeGateUrl = new URL(mockServer.baseUrl());
-		final ManagerConfig config = new ManagerConfig(
+		final var activeGateUrl = new URL(mockServer.baseUrl());
+		final var config = new ManagerConfig(
 				loggerContext,
 				activeGateUrl,
 				TOKEN,
 				false
 		);
 
-		DynatraceGenericLogIngestManager manager = new DynatraceGenericLogIngestManager("manager", config);
+		var manager = new DynatraceGenericLogIngestManager("manager", config);
 
 		assertThat(manager.releaseSub(1L, TimeUnit.SECONDS))
 				.isTrue();
@@ -130,15 +130,15 @@ class DynatraceGenericLogIngestManagerTest {
 			final String token,
 			final String logMessage,
 			final Status expectedStatus) throws Exception {
-		final URL activeGateUrl = new URL(mockServer.url(path));
-		final ManagerConfig config = new ManagerConfig(
+		final var activeGateUrl = new URL(mockServer.url(path));
+		final var config = new ManagerConfig(
 				loggerContext,
 				activeGateUrl,
 				token,
 				false
 		);
 
-		DynatraceGenericLogIngestManager manager = new DynatraceGenericLogIngestManager("manager", config);
+		var manager = new DynatraceGenericLogIngestManager("manager", config);
 
 		assertThat(manager.send(logMessage))
 				.isEqualTo(expectedStatus);

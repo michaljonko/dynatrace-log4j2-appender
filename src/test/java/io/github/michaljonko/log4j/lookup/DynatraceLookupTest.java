@@ -13,18 +13,16 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.google.common.collect.ImmutableList;
 
-import io.github.michaljonko.log4j.lookup.DynatraceLookup;
-
 class DynatraceLookupTest {
 
 	@Test
 	void readMetadata(@TempDir Path path) throws IOException {
-		Path metadataPath = Files.write(
+		var metadataPath = Files.write(
 				path.resolve("metadata.properties"),
 				ImmutableList.of("pgi=1234", "hostid=host1", "pg="),
 				StandardOpenOption.CREATE);
 
-		DynatraceLookup lookup = new DynatraceLookup(
+		var lookup = new DynatraceLookup(
 				Files.write(path.resolve("magic.properties"), metadataPath.toString().getBytes(), StandardOpenOption.CREATE)
 		);
 

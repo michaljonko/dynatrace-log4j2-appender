@@ -13,7 +13,7 @@ plugins {
 }
 
 wrapper {
-	gradleVersion = '9.2.1'
+	gradleVersion = '8.14.3'
 	distributionType = Wrapper.DistributionType.BIN
 }
 
@@ -31,8 +31,10 @@ version = appVersion
 description = appDesc
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+
     withSourcesJar()
     withJavadocJar()
 }

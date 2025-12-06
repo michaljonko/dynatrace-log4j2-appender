@@ -19,25 +19,27 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 class DynatraceGenericLogIngestAppenderBuilderTest {
-    static class MockConfiguration extends AbstractConfiguration {
-        private final boolean withoutStrSubstitutor;
-        final LoggerContext strongReferenceToKeepLoggerContext;
 
-        MockConfiguration(LoggerContext loggerContext, boolean withoutStrSubstitutor) {
-            super(loggerContext, ConfigurationSource.NULL_SOURCE);
-            this.withoutStrSubstitutor = withoutStrSubstitutor;
-            this.strongReferenceToKeepLoggerContext = loggerContext;
-        }
+	static class MockConfiguration extends AbstractConfiguration {
 
-        static MockConfiguration withMockLoggerContextWithoutStrSubstitutor() {
-            return new MockConfiguration(mock(LoggerContext.class), true);
-        }
+		private final boolean withoutStrSubstitutor;
+		final LoggerContext strongReferenceToKeepLoggerContext;
 
-        @Override
-        public StrSubstitutor getStrSubstitutor() {
-            return withoutStrSubstitutor ? null : super.getStrSubstitutor();
-        }
-    }
+		MockConfiguration(LoggerContext loggerContext, boolean withoutStrSubstitutor) {
+			super(loggerContext, ConfigurationSource.NULL_SOURCE);
+			this.withoutStrSubstitutor = withoutStrSubstitutor;
+			this.strongReferenceToKeepLoggerContext = loggerContext;
+		}
+
+		static MockConfiguration withMockLoggerContextWithoutStrSubstitutor() {
+			return new MockConfiguration(mock(LoggerContext.class), true);
+		}
+
+		@Override
+		public StrSubstitutor getStrSubstitutor() {
+			return withoutStrSubstitutor ? null : super.getStrSubstitutor();
+		}
+	}
 
 	@ParameterizedTest
 	@MethodSource("sourceForNullPointer")
@@ -59,21 +61,21 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 	private static Stream<Arguments> sourceForNullPointer() throws Exception {
 		return Stream.of(
 				Arguments.of(
-                        MockConfiguration.withMockLoggerContextWithoutStrSubstitutor(),
+						MockConfiguration.withMockLoggerContextWithoutStrSubstitutor(),
 						new URL("http://localhost"),
 						"token",
 						"name",
 						"strSubstitutor is null"
 				),
 				Arguments.of(
-                        given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+						given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
 						new URL("http://localhost"),
 						"token",
 						null,
 						"name is null"
 				),
 				Arguments.of(
-                        given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+						given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
 						new URL("http://localhost"),
 						null,
 						null,

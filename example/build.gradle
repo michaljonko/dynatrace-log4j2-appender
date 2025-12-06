@@ -6,21 +6,23 @@ plugins {
 }
 
 wrapper {
-	gradleVersion = '5.6.4'
+	gradleVersion = '8.14.3'
 	distributionType = Wrapper.DistributionType.BIN
 }
 
-group 'pl.coffeepower'
+group 'io.github.michaljonko'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-compileJava.options.encoding = 'UTF-8'
-compileTestJava.options.encoding = 'UTF-8'
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+	withSourcesJar()
+	withJavadocJar()
+}
 
 repositories {
 	mavenLocal()
 	mavenCentral()
-	jcenter()
 }
 
 application {
@@ -46,12 +48,12 @@ jar {
 }
 
 dependencies {
-	compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
-	annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
+	compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.42'
+	annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.42'
 
-	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
-	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
+	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.25.2'
+	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.2'
 	runtimeOnly group: 'io.github.michaljonko', name: 'dynatrace-log4j2-appender', version: '0.0.+'
 
-	agent group: 'io.opentelemetry.javaagent', name: 'opentelemetry-javaagent', version: '1.2.0'
+	agent group: 'io.opentelemetry.javaagent', name: 'opentelemetry-javaagent', version: '1.33.6'
 }

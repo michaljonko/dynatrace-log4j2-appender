@@ -27,9 +27,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.AdditionalAnswers;
 
-import io.github.michaljonko.log4j.appender.AbstractDynatraceGenericLogIngestManager;
-import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestAppender;
-
 class DynatraceGenericLogIngestAppenderTest {
 
 	private final java.time.Instant NOW = java.time.Instant.parse("2021-05-05T01:01:30.00Z");
@@ -80,7 +77,7 @@ class DynatraceGenericLogIngestAppenderTest {
 		appender.append(null);
 
 		then(manager)
-				.shouldHaveZeroInteractions();
+				.shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -100,7 +97,7 @@ class DynatraceGenericLogIngestAppenderTest {
 		appender.append(logEvent);
 
 		then(manager)
-				.shouldHaveZeroInteractions();
+				.shouldHaveNoInteractions();
 	}
 
 	@ParameterizedTest

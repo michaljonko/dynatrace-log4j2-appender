@@ -7,15 +7,13 @@ plugins {
 	id 'idea'
 	id 'eclipse'
 
-	id 'com.github.johnrengelman.shadow' version '5.2.0'
-	id 'maven'
 	id 'maven-publish'
-	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 	id 'signing'
 }
 
 wrapper {
-	gradleVersion = '5.6.4'
+	gradleVersion = '8.14.3'
 	distributionType = Wrapper.DistributionType.BIN
 }
 
@@ -32,13 +30,20 @@ group = appGroup
 version = appVersion
 description = appDesc
 
-sourceCompatibility = JavaVersion.VERSION_1_8
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+
+    withSourcesJar()
+    withJavadocJar()
+}
+
 compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 
 repositories {
 	mavenCentral()
-	jcenter()
 }
 
 jar {
@@ -53,18 +58,9 @@ jar {
 	}
 }
 
+
 signing {
 	sign publishing.publications
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = 'sources'
-	from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar) {
-	classifier = 'javadoc'
-	from javadoc
 }
 
 publishing {
@@ -74,7 +70,6 @@ publishing {
 			groupId appGroup
 			artifactId appName
 			version appVersion
-			artifacts = [jar, sourcesJar, javadocJar]
 
 			pom {
 				name = appName
@@ -116,21 +111,22 @@ nexusPublishing {
 }
 
 dependencies {
-	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
-	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
-	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
-	annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
+    implementation 'org.apache.logging.log4j:log4j-api:2.25.2'
+    implementation 'org.apache.logging.log4j:log4j-core:2.25.2'
+    annotationProcessor 'org.apache.logging.log4j:log4j-core:2.25.2'
 
-	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.7.1'
-	testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.28.2'
-	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '2.28.2'
-	testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.17.2'
-	testImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '2.27.2'
-	testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
-	testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.0.3'
-	testCompileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
-	testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
-	testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
+	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+	testImplementation 'org.mockito:mockito-core:5.20.0'
+	testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
+	testImplementation 'org.assertj:assertj-core:3.17.2'
+    testImplementation 'org.wiremock:wiremock:3.13.2'
+	testImplementation 'org.awaitility:awaitility:4.3.0'
+	testCompileOnly 'org.projectlombok:lombok:1.18.42'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.42'
+
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.7.1'
 }
 
 test {

@@ -9,16 +9,31 @@ import java.net.URL;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.AbstractConfiguration;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestAppender;
-
 class DynatraceGenericLogIngestAppenderBuilderTest {
+
+	static AbstractConfiguration testConfiguration(boolean withStrSubstitutor) {
+		LoggerContext loggerContext = mock(LoggerContext.class);
+
+		return new AbstractConfiguration(loggerContext, ConfigurationSource.NULL_SOURCE) {
+
+			@SuppressWarnings("unused")
+			final LoggerContext strongReferenceToLoggerContext = loggerContext;
+
+			@Override
+			public StrSubstitutor getStrSubstitutor() {
+				return withStrSubstitutor ? super.getStrSubstitutor() : null;
+			}
+		};
+	}
 
 	@ParameterizedTest
 	@MethodSource("sourceForNullPointer")
@@ -40,7 +55,7 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 	private static Stream<Arguments> sourceForNullPointer() throws Exception {
 		return Stream.of(
 				Arguments.of(
-						given(mock(Configuration.class).getLoggerContext()).willReturn(mock(LoggerContext.class)).getMock(),
+						testConfiguration(false),
 						new URL("http://localhost"),
 						"token",
 						"name",
@@ -86,17 +101,9 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 
 	@Test
 	void createAppender() throws Exception {
-		final Configuration configuration = mock(Configuration.class);
-		final LoggerContext loggerContext = mock(LoggerContext.class);
-		final StrSubstitutor strSubstitutor = mock(StrSubstitutor.class);
-
-		given(configuration.getLoggerContext())
-				.willReturn(loggerContext);
-		given(configuration.getStrSubstitutor())
-				.willReturn(strSubstitutor);
 
 		assertThat(DynatraceGenericLogIngestAppender.createBuilder()
-				.setConfiguration(configuration)
+				.setConfiguration(testConfiguration(true))
 				.setActiveGateUrl(new URL("http://localhost"))
 				.setToken("token")
 				.setName("name")

@@ -19,9 +19,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 class DynatraceGenericLogIngestAppenderBuilderTest {
-    /**
-     * @implNote needed, since parts of the log4j2 implementation require a proper {@link Configuration}, and fail with a plain mock.
-     */
     static class MockConfiguration extends AbstractConfiguration {
         private final boolean withoutStrSubstitutor;
         final LoggerContext strongReferenceToKeepLoggerContext;

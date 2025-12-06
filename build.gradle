@@ -105,23 +105,31 @@ nexusPublishing {
 	}
 }
 
+def log4jVersion = '2.25.2'
+def httpcomponentsVersion = '4.5.14'
+def junitVersion = '5.14.1'
+def junitPlatformVersion = '1.14.1'
+def mockitoVersion = '5.20.0'
+def assertjVersion = '3.27.6'
+def wireMockVersion = '3.13.2'
+def awaitilityVersion = '4.3.0'
+def lombokVersion = '1.18.42'
+
 dependencies {
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.25.2'
-	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.2'
-	annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.2'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4jVersion
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
+	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: httpcomponentsVersion
+	annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
 
-	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.14'
-
-	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.14.1'
-	testImplementation group: 'org.mockito', name: 'mockito-core', version: '5.20.0'
-	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '5.20.0'
-	testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.27.6'
-	testImplementation group: 'org.wiremock', name: 'wiremock', version: '3.13.2'
-	testImplementation group: 'org.awaitility', name: 'awaitility', version: '4.3.0'
-	testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.42'
-	testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.42'
-
-	testImplementation 'org.junit.platform:junit-platform-launcher:1.14.1'
+	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: junitVersion
+	testImplementation group: 'org.junit.platform', name: 'junit-platform-launcher', version: junitPlatformVersion
+	testImplementation group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
+	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: mockitoVersion
+	testImplementation group: 'org.assertj', name: 'assertj-core', version: assertjVersion
+	testImplementation group: 'org.wiremock', name: 'wiremock', version: wireMockVersion
+	testImplementation group: 'org.awaitility', name: 'awaitility', version: awaitilityVersion
+	testCompileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+	testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
 }
 
 test {

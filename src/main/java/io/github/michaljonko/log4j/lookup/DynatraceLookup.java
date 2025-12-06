@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -44,7 +45,9 @@ public final class DynatraceLookup extends AbstractLookup {
 			tempMetadata = linesWithPath.findFirst()
 					.map(Paths::get)
 					.map(DynatraceLookup::readMetadataFile)
+					.map(Collections::unmodifiableMap)
 					.orElse(emptyMap());
+			LOGGER.debug("DynatraceLookup uses metadata: {}", tempMetadata);
 		} catch (IOException e) {
 			LOGGER.error("DynatraceLookup cannot read metadata (magic file {})", magicFilePath);
 		}
@@ -58,10 +61,7 @@ public final class DynatraceLookup extends AbstractLookup {
 					.filter(line -> !line.startsWith("=") && line.contains("="))
 					.map(line -> line.split("=", 2))
 					.filter(array -> array.length == 1 || array.length == 2)
-					.collect(
-							collectingAndThen(
-									toMap(array -> array[0], array -> array.length == 2 ? array[1] : ""),
-									Collections::unmodifiableMap));
+					.collect(toMap(array -> array[0], array -> array.length == 2 ? array[1] : ""));
 
 		} catch (IOException e) {
 			LOGGER.error("DynatraceLookup cannot read metadata (metadata file {})", path);

@@ -16,7 +16,7 @@ abstract class AbstractDynatraceGenericLogIngestManager
 
 	protected abstract Status send(String message);
 
-	public enum Status {
+	enum Status {
 		SUCCESS,
 		FAILED,
 		EXCEPTION,

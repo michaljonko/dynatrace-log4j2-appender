@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class DynatraceGenericLogIngestAppenderBuilderTest {
 
-	static AbstractConfiguration mockConfiguration(boolean withStrSubstitutor) {
+	static AbstractConfiguration testConfiguration(boolean withStrSubstitutor) {
 		LoggerContext loggerContext = mock(LoggerContext.class);
 
 		return new AbstractConfiguration(loggerContext, ConfigurationSource.NULL_SOURCE) {
@@ -55,7 +55,7 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 	private static Stream<Arguments> sourceForNullPointer() throws Exception {
 		return Stream.of(
 				Arguments.of(
-						mockConfiguration(false),
+						testConfiguration(false),
 						new URL("http://localhost"),
 						"token",
 						"name",
@@ -103,7 +103,7 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 	void createAppender() throws Exception {
 
 		assertThat(DynatraceGenericLogIngestAppender.createBuilder()
-				.setConfiguration(mockConfiguration(true))
+				.setConfiguration(testConfiguration(true))
 				.setActiveGateUrl(new URL("http://localhost"))
 				.setToken("token")
 				.setName("name")

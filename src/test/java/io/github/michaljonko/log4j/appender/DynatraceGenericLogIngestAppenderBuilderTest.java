@@ -1,5 +1,13 @@
 package io.github.michaljonko.log4j.appender;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+
+import java.net.URL;
+import java.util.stream.Stream;
+
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.AbstractConfiguration;
 import org.apache.logging.log4j.core.config.Configuration;
@@ -10,35 +18,21 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.net.URL;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-
 class DynatraceGenericLogIngestAppenderBuilderTest {
 
-	static class MockConfiguration extends AbstractConfiguration {
+	static AbstractConfiguration mockConfiguration(boolean withStrSubstitutor) {
+		LoggerContext loggerContext = mock(LoggerContext.class);
 
-		private final boolean withoutStrSubstitutor;
-		final LoggerContext strongReferenceToKeepLoggerContext;
+		return new AbstractConfiguration(loggerContext, ConfigurationSource.NULL_SOURCE) {
 
-		MockConfiguration(LoggerContext loggerContext, boolean withoutStrSubstitutor) {
-			super(loggerContext, ConfigurationSource.NULL_SOURCE);
-			this.withoutStrSubstitutor = withoutStrSubstitutor;
-			this.strongReferenceToKeepLoggerContext = loggerContext;
-		}
+			@SuppressWarnings("unused")
+			final LoggerContext strongReferenceToLoggerContext = loggerContext;
 
-		static MockConfiguration withMockLoggerContextWithoutStrSubstitutor() {
-			return new MockConfiguration(mock(LoggerContext.class), true);
-		}
-
-		@Override
-		public StrSubstitutor getStrSubstitutor() {
-			return withoutStrSubstitutor ? null : super.getStrSubstitutor();
-		}
+			@Override
+			public StrSubstitutor getStrSubstitutor() {
+				return withStrSubstitutor ? super.getStrSubstitutor() : null;
+			}
+		};
 	}
 
 	@ParameterizedTest
@@ -61,7 +55,7 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 	private static Stream<Arguments> sourceForNullPointer() throws Exception {
 		return Stream.of(
 				Arguments.of(
-						MockConfiguration.withMockLoggerContextWithoutStrSubstitutor(),
+						mockConfiguration(false),
 						new URL("http://localhost"),
 						"token",
 						"name",
@@ -109,7 +103,7 @@ class DynatraceGenericLogIngestAppenderBuilderTest {
 	void createAppender() throws Exception {
 
 		assertThat(DynatraceGenericLogIngestAppender.createBuilder()
-				.setConfiguration(new MockConfiguration(mock(LoggerContext.class), false))
+				.setConfiguration(mockConfiguration(true))
 				.setActiveGateUrl(new URL("http://localhost"))
 				.setToken("token")
 				.setName("name")

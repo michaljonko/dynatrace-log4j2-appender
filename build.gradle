@@ -34,9 +34,6 @@ java {
     withJavadocJar()
 }
 
-compileJava.options.encoding = 'UTF-8'
-compileTestJava.options.encoding = 'UTF-8'
-
 repositories {
 	mavenCentral()
 }
@@ -105,7 +102,6 @@ nexusPublishing {
 }
 
 def log4jVersion = '2.25.3'
-def httpcomponentsVersion = '4.5.14'
 def junitVersion = '5.14.1'
 def junitPlatformVersion = '1.14.1'
 def mockitoVersion = '5.20.0'
@@ -117,7 +113,6 @@ def lombokVersion = '1.18.42'
 dependencies {
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4jVersion
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
-	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: httpcomponentsVersion
 	annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
 
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: junitVersion

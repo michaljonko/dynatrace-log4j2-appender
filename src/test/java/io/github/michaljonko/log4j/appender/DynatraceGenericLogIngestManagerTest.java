@@ -3,17 +3,14 @@ package io.github.michaljonko.log4j.appender;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static io.github.michaljonko.log4j.appender.AbstractDynatraceGenericLogIngestManager.Status;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;
-import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URL;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import org.apache.http.HttpStatus;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +33,7 @@ import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.Man
 class DynatraceGenericLogIngestManagerTest {
 
 	private static final String TOKEN = "123456";
-	private static final int[] SUCCESS_STATUS_CODES = { HttpStatus.SC_OK, HttpStatus.SC_NO_CONTENT };
+	private static final int[] SUCCESS_STATUS_CODES = { 200, 204 };
 	@Mock
 	private LoggerContext loggerContext;
 	private WireMockServer mockServer;
@@ -51,7 +48,7 @@ class DynatraceGenericLogIngestManagerTest {
 				post("/ingest")
 						.withHeader("Authorization", new EqualToPattern("Api-Token " + TOKEN))
 						.withHeader("User-Agent", new ContainsPattern("Dynatrace"))
-						.withHeader("Content-Type", new EqualToPattern(APPLICATION_JSON.withCharset(UTF_8).toString()))
+						.withHeader("Content-Type", new EqualToPattern("application/json; charset=UTF-8"))
 						.willReturn(aResponse()
 								.withFixedDelay(1)
 								.withStatus(
@@ -61,7 +58,7 @@ class DynatraceGenericLogIngestManagerTest {
 				post("/ingest-timeout")
 						.willReturn(aResponse()
 								.withFixedDelay((int) TimeUnit.SECONDS.toMillis(1L))
-								.withStatus(HttpStatus.SC_OK))
+								.withStatus(200))
 		);
 
 		mockServer.start();
@@ -83,9 +80,8 @@ class DynatraceGenericLogIngestManagerTest {
 				TOKEN,
 				false
 		);
-		final var requestConfig = RequestConfig.custom().setSocketTimeout(10).build();
 
-		var manager = new DynatraceGenericLogIngestManager("manager", config, requestConfig);
+		var manager = new DynatraceGenericLogIngestManager("manager", config, Duration.ofMillis(100L));
 
 		assertThat(manager.send("message"))
 				.isEqualTo(Status.EXCEPTION);

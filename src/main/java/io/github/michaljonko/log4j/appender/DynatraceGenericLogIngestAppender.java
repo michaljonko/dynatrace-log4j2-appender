@@ -2,7 +2,6 @@ package io.github.michaljonko.log4j.appender;
 
 import static io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.ManagerConfig;
 import static io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.getManager;
-import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
@@ -136,6 +135,7 @@ public final class DynatraceGenericLogIngestAppender
 
 	/**
 	 * Builder factory method.
+	 *
 	 * @param <B> type
 	 * @return new instance of the Builder
 	 */
@@ -146,6 +146,7 @@ public final class DynatraceGenericLogIngestAppender
 
 	/**
 	 * Builder for {@link io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestAppender}.
+	 *
 	 * @param <B> DynatraceGenericLogIngestAppender
 	 */
 	public static final class Builder<B extends Builder<B>>
@@ -162,6 +163,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Get Active Gate URL.
+		 *
 		 * @return URL
 		 */
 		public URL getActiveGateUrl() {
@@ -170,6 +172,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Set Active Gate URL.
+		 *
 		 * @param activeGateUrl valid url
 		 * @return this
 		 */
@@ -180,6 +183,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Get Token used for authentication on Active Gate.
+		 *
 		 * @return token
 		 */
 		public String getToken() {
@@ -188,6 +192,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Set Token for authentication on Active Gate. It has to be token with Log Ingest permission.
+		 *
 		 * @param token valid token
 		 * @return this
 		 */
@@ -198,6 +203,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Should validate SSL connection.
+		 *
 		 * @return true if will valid
 		 */
 		public boolean isSslValidation() {
@@ -206,6 +212,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Set SSL validation flag.
+		 *
 		 * @param sslValidation true - will valid, false - skip validation
 		 * @return this
 		 */

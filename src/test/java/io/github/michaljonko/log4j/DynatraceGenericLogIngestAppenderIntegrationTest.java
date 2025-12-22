@@ -2,9 +2,7 @@ package io.github.michaljonko.log4j;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;
-import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -15,7 +13,6 @@ import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.UUID;
 
-import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -46,8 +43,8 @@ class DynatraceGenericLogIngestAppenderIntegrationTest {
 				post("/ingest")
 						.withHeader("Authorization", new EqualToPattern("Api-Token 123456"))
 						.withHeader("User-Agent", new ContainsPattern("Dynatrace"))
-						.withHeader("Content-Type", new EqualToPattern(APPLICATION_JSON.withCharset(UTF_8).toString()))
-						.willReturn(aResponse().withFixedDelay(10).withStatus(HttpStatus.SC_OK))
+						.withHeader("Content-Type", new EqualToPattern("application/json; charset=UTF-8"))
+						.willReturn(aResponse().withFixedDelay(10).withStatus(200))
 		);
 		SERVER.start();
 

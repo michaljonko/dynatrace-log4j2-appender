@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat
 
 plugins {
 	id 'java'
-
 	id 'maven-publish'
 	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 	id 'signing'
@@ -29,8 +28,8 @@ version = appVersion
 description = appDesc
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
     withJavadocJar()
 }
@@ -62,9 +61,9 @@ publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			from components.java
-			groupId appGroup
-			artifactId appName
-			version appVersion
+			groupId = appGroup
+			artifactId = appName
+			version = appVersion
 
 			pom {
 				name = appName
@@ -105,7 +104,7 @@ nexusPublishing {
 	}
 }
 
-def log4jVersion = '2.25.2'
+def log4jVersion = '2.25.3'
 def httpcomponentsVersion = '4.5.14'
 def junitVersion = '5.14.1'
 def junitPlatformVersion = '1.14.1'

@@ -38,7 +38,7 @@ final class DynatraceGenericLogIngestAttribute {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		DynatraceGenericLogIngestAttribute that = (DynatraceGenericLogIngestAttribute) o;
+		var that = (DynatraceGenericLogIngestAttribute) o;
 		return valueNeedsLookup == that.valueNeedsLookup &&
 				Objects.equals(name, that.name) &&
 				Objects.equals(value, that.value);

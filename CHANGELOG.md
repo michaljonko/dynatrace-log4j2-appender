@@ -1,6 +1,11 @@
 # Changelog
 ---
 
+### 0.0.8
+    - Gradle upgrade to 8.14.3 (latest Java 11 supported)
+    - Upgraded dependencies - Log4j2, JUnit5, etc.
+    - Compatability with Java 11 (Java 11 is minimal supported version)
+
 ### 0.0.7
     - Changed groupId and packages to io.github.michaljonko
     - Added gradle configuration to make MavenCentral deployment available

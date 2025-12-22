@@ -10,14 +10,12 @@ wrapper {
 	distributionType = Wrapper.DistributionType.BIN
 }
 
-group 'io.github.michaljonko'
+group 'pl.coffeepower'
 version '1.0-SNAPSHOT'
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
-	withSourcesJar()
-	withJavadocJar()
+	sourceCompatibility = JavaVersion.VERSION_11
+	targetCompatibility = JavaVersion.VERSION_11
 }
 
 repositories {
@@ -51,8 +49,8 @@ dependencies {
 	compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.42'
 	annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.42'
 
-	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.25.2'
-	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.2'
+	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.25.3'
+	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.3'
 	runtimeOnly group: 'io.github.michaljonko', name: 'dynatrace-log4j2-appender', version: '0.0.+'
 
 	agent group: 'io.opentelemetry.javaagent', name: 'opentelemetry-javaagent', version: '1.33.6'

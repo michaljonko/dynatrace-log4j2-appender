@@ -57,7 +57,7 @@ final class DynatraceGenericLogIngestManager
 		this.authorizationTokenHeader =
 				new BasicHeader("Authorization", "Api-Token " + requireNonNull(managerConfig.getToken(), "token is null"));
 
-		final HttpClientBuilder httpClientBuilder = HttpClients.custom()
+		final var httpClientBuilder = HttpClients.custom()
 				.disableAuthCaching()
 				.disableCookieManagement()
 				.setUserAgent(USER_AGENT)
@@ -65,9 +65,9 @@ final class DynatraceGenericLogIngestManager
 
 		if (!managerConfig.isSslValidation()) {
 			try {
-				SSLContext sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
-				HostnameVerifier verifier = new NoopHostnameVerifier();
-				SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, verifier);
+				var sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
+				var verifier = new NoopHostnameVerifier();
+				var sslSocketFactory = new SSLConnectionSocketFactory(sslContext, verifier);
 				httpClientBuilder.setSSLSocketFactory(sslSocketFactory);
 			} catch (Exception t) {
 				logError("Error during appender initialization. SSL validation cannot be disabled. "
@@ -111,28 +111,26 @@ final class DynatraceGenericLogIngestManager
 			return Status.EMPTY_MESSAGE;
 		}
 
-		HttpPost request = new HttpPost(activeGateUrl);
+		var request = new HttpPost(activeGateUrl);
 		request.setHeader(authorizationTokenHeader);
 		request.setEntity(new StringEntity(message, CONTENT_TYPE));
 
-		StatusLine statusLine;
 		try (CloseableHttpResponse response = httpClient.execute(request)) {
-			statusLine = response.getStatusLine();
+			var statusLine = response.getStatusLine();
+			var statusCode = statusLine.getStatusCode();
+			var success = (statusCode == HttpStatus.SC_OK) || (statusCode == HttpStatus.SC_NO_CONTENT);
+
+			if (!success) {
+				logWarn("ActiveGate rejected request.",
+						new RejectedRequestException(statusCode, statusLine.getReasonPhrase()));
+				return Status.FAILED;
+			}
+
+			return Status.SUCCESS;
 		} catch (IOException e) {
 			logError("Cannot send log event", e);
 			return Status.EXCEPTION;
 		}
-
-		int statusCode = statusLine.getStatusCode();
-		boolean success = (statusCode == HttpStatus.SC_OK) || (statusCode == HttpStatus.SC_NO_CONTENT);
-
-		if (!success) {
-			logWarn("ActiveGate rejected request.",
-					new RejectedRequestException(statusCode, statusLine.getReasonPhrase()));
-			return Status.FAILED;
-		}
-
-		return Status.SUCCESS;
 	}
 
 	static DynatraceGenericLogIngestManager getManager(String name,
@@ -184,7 +182,7 @@ final class DynatraceGenericLogIngestManager
 			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
-			ManagerConfig data = (ManagerConfig) o;
+			var data = (ManagerConfig) o;
 			return sslValidation == data.sslValidation &&
 					Objects.equals(loggerContext, data.loggerContext) &&
 					Objects.equals(activeGateUrl, data.activeGateUrl) &&

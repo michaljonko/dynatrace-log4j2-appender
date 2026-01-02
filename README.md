@@ -2,7 +2,7 @@
 # Dynatrace Generic Log Ingest Log4j2 Appender
 Log4j2 Appender & Lookup to integrate Java applications with _Dynatrace Generic Log Ingest_ functionality.
 
-Last stable version: _0.0.7_
+Last stable version: _0.0.8_
 
 To make it works you have to provide two parameters:
 - `activeGateUrl` - URL to ActiveGate instance with Generic Log Ingest module enabled
@@ -28,7 +28,7 @@ Lookup attribute | Configuration | Description
 `trace_flags` | ${otel:trace_flags} | The current trace flags, formatted according to W3C traceflags format
 
 ### Requirements
-- **Log4j2** version >= 2.12.0
+- **Log4j2** version >= 2.25.3
 - for _DynatraceLookup_ ** [Dynatrace OneAgent](https://www.dynatrace.com/support/help/dynatrace-api/environment-api/deployment/oneagent/download-oneagent-latest/) ** 1.215 and newer is needed
 - for _OpenTelemetryLookup_ ** [OpenTelemetry Instrumentation for Java](https://github.com/open-telemetry/opentelemetry-java-instrumentation) ** is needed
 
@@ -40,11 +40,11 @@ repositories {
 }
 
 dependencies {
-	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
-	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
+	compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.25.3'
+	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.3'
 
-	runtimeOnly group: 'io.github.michaljonko', name: 'dynatrace-log4j2-appender', version: '0.0.7'
-	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.14.0'
+	runtimeOnly group: 'io.github.michaljonko', name: 'dynatrace-log4j2-appender', version: '0.0.8'
+	runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.25.3'
 }
 ```
 Maven
@@ -52,7 +52,7 @@ Maven
 <dependency>
 	<groupId>io.github.michaljonko</groupId>
 	<artifactId>dynatrace-log4j2-appender</artifactId>
-	<version>0.0.7</version>
+	<version>0.0.8</version>
 	<type>pom</type>
 </dependency>
 ```

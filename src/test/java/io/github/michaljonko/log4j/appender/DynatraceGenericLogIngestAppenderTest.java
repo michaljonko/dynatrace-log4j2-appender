@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.AbstractLogEvent;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
@@ -22,17 +23,26 @@ import org.apache.logging.log4j.core.layout.SerializedLayout;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.apache.logging.log4j.core.time.Instant;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.AdditionalAnswers;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import io.github.michaljonko.log4j.appender.AbstractDynatraceGenericLogIngestManager;
-import io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestAppender;
-
+@ExtendWith(MockitoExtension.class)
 class DynatraceGenericLogIngestAppenderTest {
 
-	private final java.time.Instant NOW = java.time.Instant.parse("2021-05-05T01:01:30.00Z");
+	private static final java.time.Instant NOW = java.time.Instant.parse("2025-05-05T01:01:30.00Z");
+	@Mock(strictness = Mock.Strictness.LENIENT)
+	private static Layout layout;
+	@Mock(strictness = Mock.Strictness.LENIENT)
+	private static StrSubstitutor substitutor;
+	@Mock(strictness = Mock.Strictness.LENIENT)
+	private static AbstractDynatraceGenericLogIngestManager manager;
+	@Mock(strictness = Mock.Strictness.LENIENT)
+	private Filter filter;
 
 	@ParameterizedTest
 	@MethodSource("sourceForNullPointer")
@@ -43,8 +53,6 @@ class DynatraceGenericLogIngestAppenderTest {
 			final Property[] properties,
 			final Class<? extends Throwable> expectedExceptionType,
 			final String expectedMessage) {
-		final Filter filter = mock(Filter.class);
-
 		assertThatExceptionOfType(expectedExceptionType)
 				.isThrownBy(() ->
 						new DynatraceGenericLogIngestAppender(name, layout, filter, substitutor, false, properties, manager))
@@ -52,10 +60,6 @@ class DynatraceGenericLogIngestAppenderTest {
 	}
 
 	private static Stream<Arguments> sourceForNullPointer() {
-		Layout layout = mock(Layout.class);
-		StrSubstitutor substitutor = mock(StrSubstitutor.class);
-		AbstractDynatraceGenericLogIngestManager manager = mock(AbstractDynatraceGenericLogIngestManager.class);
-
 		return Stream.of(
 				Arguments.of(null, layout, substitutor, manager, null, NullPointerException.class, "name"),
 				Arguments.of("name", null, substitutor, manager, null, NullPointerException.class, "layout is null"),
@@ -69,38 +73,32 @@ class DynatraceGenericLogIngestAppenderTest {
 
 	@Test
 	void doNotCallManagerWhenMessageIsNull() {
-		final Layout layout = mock(Layout.class);
-		final StrSubstitutor substitutor = mock(StrSubstitutor.class);
-		final Filter filter = mock(Filter.class);
-		final AbstractDynatraceGenericLogIngestManager manager = mock(AbstractDynatraceGenericLogIngestManager.class);
-
-		DynatraceGenericLogIngestAppender appender =
+		var appender =
 				new DynatraceGenericLogIngestAppender("name", layout, filter, substitutor, false, null, manager);
 
 		appender.append(null);
 
 		then(manager)
-				.shouldHaveZeroInteractions();
+				.shouldHaveNoInteractions();
 	}
 
 	@Test
 	void doNotCallManagerWhenEventIsForLogger() {
-		final Layout layout = mock(Layout.class);
-		final StrSubstitutor substitutor = mock(StrSubstitutor.class);
-		final Filter filter = mock(Filter.class);
-		final AbstractDynatraceGenericLogIngestManager manager = mock(AbstractDynatraceGenericLogIngestManager.class);
-		final LogEvent logEvent = mock(LogEvent.class);
+		final var logEvent = new AbstractLogEvent() {
 
-		given(logEvent.getLoggerName())
-				.willReturn(this.getClass().getPackage().getName());
+			@Override
+			public String getLoggerName() {
+				return this.getClass().getPackage().getName();
+			}
+		};
 
-		DynatraceGenericLogIngestAppender appender =
+		var appender =
 				new DynatraceGenericLogIngestAppender("name", layout, filter, substitutor, false, null, manager);
 
 		appender.append(logEvent);
 
 		then(manager)
-				.shouldHaveZeroInteractions();
+				.shouldHaveNoInteractions();
 	}
 
 	@ParameterizedTest
@@ -108,28 +106,31 @@ class DynatraceGenericLogIngestAppenderTest {
 	void sendMessage(final String message,
 			final Property[] properties,
 			final String expectedJson) {
-		final Layout layout = mock(Layout.class);
-		final StrSubstitutor substitutor = mock(StrSubstitutor.class);
-		final Filter filter = mock(Filter.class);
-		final AbstractDynatraceGenericLogIngestManager manager = mock(AbstractDynatraceGenericLogIngestManager.class);
-		final LogEvent logEvent = mock(LogEvent.class);
-		final Instant instant = mock(Instant.class);
-
+		final var instant = mock(Instant.class);
 		given(instant.getEpochMillisecond())
 				.willReturn(NOW.toEpochMilli());
 		given(instant.getNanoOfMillisecond())
 				.willReturn(NOW.getNano());
-		given(logEvent.getInstant())
-				.willReturn(instant);
-		given(logEvent.getLevel())
-				.willReturn(Level.DEBUG);
+		final var logEvent = new AbstractLogEvent() {
+
+			@Override
+			public Instant getInstant() {
+				return instant;
+			}
+
+			@Override
+			public Level getLevel() {
+				return Level.DEBUG;
+			}
+		};
+
 		given(layout.toByteArray(logEvent))
 				.willReturn(message.getBytes(StandardCharsets.UTF_8));
 		given(substitutor.replace(eq(logEvent), anyString()))
 				.willAnswer(AdditionalAnswers.<String, LogEvent, String> answer(
 						(event, value) -> value.replace("${", "").replace("}", "")));
 
-		DynatraceGenericLogIngestAppender appender =
+		var appender =
 				new DynatraceGenericLogIngestAppender("name", layout, filter, substitutor, false, properties, manager);
 
 		appender.append(logEvent);
@@ -144,47 +145,50 @@ class DynatraceGenericLogIngestAppenderTest {
 				Arguments.of(
 						"simple message",
 						null,
-						"{\"timestamp\":\"2021-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"message\":\"simple message\"}"
+						"{\"timestamp\":\"2025-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"message\":\"simple message\"}"
 				),
 				Arguments.of(
 						"simple message",
 						new Property[] { createProperty("prop", "value") },
-						"{\"timestamp\":\"2021-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"prop\":\"value\",\"message\":\"simple message\"}"
+						"{\"timestamp\":\"2025-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"prop\":\"value\",\"message\":\"simple message\"}"
 				),
 				Arguments.of(
 						"simple message",
 						new Property[] { createProperty("p1", "v1"), createProperty("p2", "v2") },
-						"{\"timestamp\":\"2021-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"p1\":\"v1\",\"p2\":\"v2\",\"message\":\"simple message\"}"
+						"{\"timestamp\":\"2025-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"p1\":\"v1\",\"p2\":\"v2\",\"message\":\"simple message\"}"
 				),
 				Arguments.of(
 						"simple message",
 						new Property[] { createProperty("p1", "v1"), createProperty("p2", "v2"), createProperty("p3", "${eval}")
 						},
-						"{\"timestamp\":\"2021-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"p1\":\"v1\",\"p2\":\"v2\",\"p3\":\"eval\",\"message\":\"simple message\"}"
+						"{\"timestamp\":\"2025-05-05T03:01:30.000\",\"level\":\"DEBUG\",\"p1\":\"v1\",\"p2\":\"v2\",\"p3\":\"eval\",\"message\":\"simple message\"}"
 				)
 		);
 	}
 
 	@Test
 	void sendMessageFormattedBySerializedLayout() {
-		final SerializedLayout layout = SerializedLayout.createLayout();
-		final StrSubstitutor substitutor = mock(StrSubstitutor.class);
-		final Filter filter = mock(Filter.class);
-		final AbstractDynatraceGenericLogIngestManager manager = mock(AbstractDynatraceGenericLogIngestManager.class);
-		final LogEvent logEvent = mock(LogEvent.class);
-		final Instant instant = mock(Instant.class);
-
+		final var serializedLayout = SerializedLayout.createLayout();
+		final var instant = mock(Instant.class);
 		given(instant.getEpochMillisecond())
 				.willReturn(NOW.toEpochMilli());
 		given(instant.getNanoOfMillisecond())
 				.willReturn(NOW.getNano());
-		given(logEvent.getInstant())
-				.willReturn(instant);
-		given(logEvent.getLevel())
-				.willReturn(Level.DEBUG);
+		final var logEvent = new AbstractLogEvent() {
 
-		DynatraceGenericLogIngestAppender appender =
-				new DynatraceGenericLogIngestAppender("name", layout, filter, substitutor, false, null, manager);
+			@Override
+			public Instant getInstant() {
+				return instant;
+			}
+
+			@Override
+			public Level getLevel() {
+				return Level.DEBUG;
+			}
+		};
+
+		var appender =
+				new DynatraceGenericLogIngestAppender("name", serializedLayout, filter, substitutor, false, null, manager);
 
 		appender.append(logEvent);
 
@@ -195,15 +199,10 @@ class DynatraceGenericLogIngestAppenderTest {
 
 	@Test
 	void stopAppender() {
-		final Layout layout = mock(Layout.class);
-		final StrSubstitutor substitutor = mock(StrSubstitutor.class);
-		final Filter filter = mock(Filter.class);
-		final AbstractDynatraceGenericLogIngestManager manager = mock(AbstractDynatraceGenericLogIngestManager.class);
-
 		given(manager.stop(1L, TimeUnit.SECONDS))
 				.willReturn(true);
 
-		DynatraceGenericLogIngestAppender appender =
+		var appender =
 				new DynatraceGenericLogIngestAppender("name", layout, filter, substitutor, false, null, manager);
 
 		assertThat(appender.stop(1L, TimeUnit.SECONDS))

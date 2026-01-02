@@ -2,7 +2,6 @@ package io.github.michaljonko.log4j.appender;
 
 import static io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.ManagerConfig;
 import static io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestManager.getManager;
-import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
@@ -61,7 +60,7 @@ public final class DynatraceGenericLogIngestAppender
 		this.strSubstitutor = requireNonNull(strSubstitutor, "strSubstitutor is null");
 
 		if (nonNull(properties) && properties.length > 0) {
-			long distinctPropertyNames = Arrays.stream(properties)
+			var distinctPropertyNames = Arrays.stream(properties)
 					.map(Property::getName)
 					.distinct()
 					.count();
@@ -74,7 +73,7 @@ public final class DynatraceGenericLogIngestAppender
 					.map(p -> new DynatraceGenericLogIngestAttribute(p.getName(), p.getValue(), p.isValueNeedsLookup()))
 					.collect(collectingAndThen(Collectors.toCollection(LinkedHashSet::new), Collections::unmodifiableSet));
 		} else {
-			this.attributes = emptySet();
+			this.attributes = Set.of();
 		}
 	}
 
@@ -84,17 +83,17 @@ public final class DynatraceGenericLogIngestAppender
 			return;
 		}
 
-		String loggerName = event.getLoggerName();
+		var loggerName = event.getLoggerName();
 		if (nonNull(loggerName) && loggerName.startsWith(PACKAGE)) {
 			getStatusLogger().warn("Recursive logging from [{}] for appender [{}].", event.getLoggerName(), getName());
 			return;
 		}
 
-		final Layout<? extends Serializable> layout = getLayout();
+		final var layout = getLayout();
 		byte[] message;
 		if (layout instanceof SerializedLayout) {
-			byte[] header = layout.getHeader();
-			byte[] formattedEvent = layout.toByteArray(event);
+			var header = layout.getHeader();
+			var formattedEvent = layout.toByteArray(event);
 			message = new byte[header.length + formattedEvent.length];
 			System.arraycopy(header, 0, message, 0, header.length);
 			System.arraycopy(formattedEvent, 0, message, header.length, formattedEvent.length);
@@ -102,15 +101,15 @@ public final class DynatraceGenericLogIngestAppender
 			message = layout.toByteArray(event);
 		}
 
-		final StringBuilder jsonBuilder = new StringBuilder()
+		final var jsonBuilder = new StringBuilder()
 				.append("{")
 				.append(dquote("timestamp")).append(":").append(dquote(DATE_FORMAT.formatInstant(event.getInstant())))
 				.append(",")
 				.append(dquote("level")).append(":").append(dquote(event.getLevel().name())).append(",");
 
-		for (DynatraceGenericLogIngestAttribute attribute : attributes) {
-			String name = attribute.getName();
-			String value =
+		for (var attribute : attributes) {
+			var name = attribute.getName();
+			var value =
 					attribute.valueNeedsLookup() ? strSubstitutor.replace(event, attribute.getValue()) : attribute.getValue();
 
 			jsonBuilder.append(dquote(name)).append(":\"");
@@ -122,7 +121,7 @@ public final class DynatraceGenericLogIngestAppender
 		JsonUtils.quoteAsString(new String(message), jsonBuilder);
 		jsonBuilder.append("\"}");
 
-		String jsonMessage = jsonBuilder.toString();
+		var jsonMessage = jsonBuilder.toString();
 		if (manager.send(jsonMessage) != AbstractDynatraceGenericLogIngestManager.Status.SUCCESS) {
 			getStatusLogger().warn("Cannot send log event {}", jsonMessage);
 		}
@@ -136,6 +135,7 @@ public final class DynatraceGenericLogIngestAppender
 
 	/**
 	 * Builder factory method.
+	 *
 	 * @param <B> type
 	 * @return new instance of the Builder
 	 */
@@ -146,6 +146,7 @@ public final class DynatraceGenericLogIngestAppender
 
 	/**
 	 * Builder for {@link io.github.michaljonko.log4j.appender.DynatraceGenericLogIngestAppender}.
+	 *
 	 * @param <B> DynatraceGenericLogIngestAppender
 	 */
 	public static final class Builder<B extends Builder<B>>
@@ -162,6 +163,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Get Active Gate URL.
+		 *
 		 * @return URL
 		 */
 		public URL getActiveGateUrl() {
@@ -170,6 +172,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Set Active Gate URL.
+		 *
 		 * @param activeGateUrl valid url
 		 * @return this
 		 */
@@ -180,6 +183,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Get Token used for authentication on Active Gate.
+		 *
 		 * @return token
 		 */
 		public String getToken() {
@@ -188,6 +192,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Set Token for authentication on Active Gate. It has to be token with Log Ingest permission.
+		 *
 		 * @param token valid token
 		 * @return this
 		 */
@@ -198,6 +203,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Should validate SSL connection.
+		 *
 		 * @return true if will valid
 		 */
 		public boolean isSslValidation() {
@@ -206,6 +212,7 @@ public final class DynatraceGenericLogIngestAppender
 
 		/**
 		 * Set SSL validation flag.
+		 *
 		 * @param sslValidation true - will valid, false - skip validation
 		 * @return this
 		 */
@@ -216,13 +223,13 @@ public final class DynatraceGenericLogIngestAppender
 
 		@Override
 		public DynatraceGenericLogIngestAppender build() {
-			final ManagerConfig managerConfig =
+			final var managerConfig =
 					new ManagerConfig(requireNonNull(getConfiguration(), "configuration is null").getLoggerContext(),
 							getActiveGateUrl(),
 							getToken(),
 							isSslValidation());
 
-			final DynatraceGenericLogIngestManager manager = getManager(getName(), managerConfig);
+			final var manager = getManager(getName(), managerConfig);
 
 			return new DynatraceGenericLogIngestAppender(getName(),
 					getOrCreateLayout(),

@@ -2,22 +2,17 @@ package io.github.michaljonko.log4j;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;
-import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
-import java.util.List;
 import java.util.UUID;
 
-import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,7 +24,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.ContainsPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import com.google.common.collect.Lists;
 
 class DynatraceGenericLogIngestAppenderIntegrationTest {
@@ -49,12 +43,12 @@ class DynatraceGenericLogIngestAppenderIntegrationTest {
 				post("/ingest")
 						.withHeader("Authorization", new EqualToPattern("Api-Token 123456"))
 						.withHeader("User-Agent", new ContainsPattern("Dynatrace"))
-						.withHeader("Content-Type", new EqualToPattern(APPLICATION_JSON.withCharset(UTF_8).toString()))
-						.willReturn(aResponse().withFixedDelay(10).withStatus(HttpStatus.SC_OK))
+						.withHeader("Content-Type", new EqualToPattern("application/json; charset=UTF-8"))
+						.willReturn(aResponse().withFixedDelay(10).withStatus(200))
 		);
 		SERVER.start();
 
-		Path tempConfigFile = Files.createTempFile("log4j", "test");
+		var tempConfigFile = Files.createTempFile("log4j", "test");
 		assertThat(
 				Files.copy(
 						CONFIG_RESOURCE.openStream(),
@@ -75,7 +69,7 @@ class DynatraceGenericLogIngestAppenderIntegrationTest {
 
 	@Test
 	void integrationCheck() {
-		try (SimpleLogGenerator app = new SimpleLogGenerator("Simple text")) {
+		try (var app = new SimpleLogGenerator("Simple text")) {
 			assertThat(app.getAtomicNumberValue())
 					.isZero();
 			app.setAtomicNumberValue(5);
@@ -89,7 +83,7 @@ class DynatraceGenericLogIngestAppenderIntegrationTest {
 					.timeout(Duration.ofSeconds(5L))
 					.until(() -> !SERVER.getServeEvents().getRequests().isEmpty());
 
-			List<ServeEvent> requests = SERVER.getServeEvents().getRequests();
+			var requests = SERVER.getServeEvents().getRequests();
 
 			assertThat(requests)
 					.hasSize(5)

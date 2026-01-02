@@ -2,16 +2,13 @@ package io.github.michaljonko.log4j.lookup;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LogEvent;
@@ -40,11 +37,12 @@ public final class DynatraceLookup extends AbstractLookup {
 
 	DynatraceLookup(Path magicFilePath) {
 		Map<String, String> tempMetadata = emptyMap();
-		try (Stream<String> linesWithPath = Files.lines(requireNonNull(magicFilePath, "magicFilePath is null"))) {
+		try (var linesWithPath = Files.lines(requireNonNull(magicFilePath, "magicFilePath is null"))) {
 			tempMetadata = linesWithPath.findFirst()
 					.map(Paths::get)
 					.map(DynatraceLookup::readMetadataFile)
-					.orElse(emptyMap());
+					.orElse(Map.of());
+			LOGGER.debug("DynatraceLookup uses metadata: {}", tempMetadata);
 		} catch (IOException e) {
 			LOGGER.error("DynatraceLookup cannot read metadata (magic file {})", magicFilePath);
 		}
@@ -52,20 +50,16 @@ public final class DynatraceLookup extends AbstractLookup {
 	}
 
 	private static Map<String, String> readMetadataFile(Path path) {
-		try (Stream<String> linesWithProperties = Files.lines(path)) {
+		try (var linesWithProperties = Files.lines(path)) {
 			return linesWithProperties
 					.filter(Strings::isNotBlank)
 					.filter(line -> !line.startsWith("=") && line.contains("="))
 					.map(line -> line.split("=", 2))
 					.filter(array -> array.length == 1 || array.length == 2)
-					.collect(
-							collectingAndThen(
-									toMap(array -> array[0], array -> array.length == 2 ? array[1] : ""),
-									Collections::unmodifiableMap));
-
+					.collect(toUnmodifiableMap(array -> array[0], array -> array.length == 2 ? array[1] : ""));
 		} catch (IOException e) {
 			LOGGER.error("DynatraceLookup cannot read metadata (metadata file {})", path);
-			return emptyMap();
+			return Map.of();
 		}
 	}
 

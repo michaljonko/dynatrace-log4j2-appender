@@ -5,29 +5,28 @@ import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.ManagerFactory;
 import org.apache.logging.log4j.util.Strings;
@@ -37,56 +36,84 @@ final class DynatraceGenericLogIngestManager
 
 	private static final ManagerFactory<DynatraceGenericLogIngestManager, ManagerConfig> MANAGER_FACTORY =
 			new DynatraceGenericLogIngestManagerFactory();
-	private static final ContentType CONTENT_TYPE =
-			ContentType.APPLICATION_JSON.withCharset(UTF_8);
+	private static final String CONTENT_TYPE =
+			"application/json; charset=UTF-8";
 	private static final String USER_AGENT =
 			"Dynatrace Generic Log Ingest Appender";
 
-	private final String activeGateUrl;
-	private final BasicHeader authorizationTokenHeader;
-	private final CloseableHttpClient httpClient;
+	private final URI activeGateUrl;
+	private final String authorizationToken;
+	private final HttpClient httpClient;
 
 	DynatraceGenericLogIngestManager(String name,
 			ManagerConfig managerConfig,
-			RequestConfig requestConfig) {
+			Duration connectionTimeout) {
 		super(requireNonNull(requireNonNull(managerConfig, "managerConfig is null").getLoggerContext(), "loggerContext is null"),
 				requireNonNull(name, "name is null"));
 
-		this.activeGateUrl =
-				requireNonNull(managerConfig.getActiveGateUrl(), "activeGateUrl is null").toString();
-		this.authorizationTokenHeader =
-				new BasicHeader("Authorization", "Api-Token " + requireNonNull(managerConfig.getToken(), "token is null"));
+		try {
+			this.activeGateUrl =
+					requireNonNull(managerConfig.getActiveGateUrl(), "activeGateUrl is null").toURI();
+			this.authorizationToken =
+					"Api-Token " + requireNonNull(managerConfig.getToken(), "token is null");
 
-		final HttpClientBuilder httpClientBuilder = HttpClients.custom()
-				.disableAuthCaching()
-				.disableCookieManagement()
-				.setUserAgent(USER_AGENT)
-				.setDefaultRequestConfig(requestConfig);
+			final var httpClientBuilder = HttpClient.newBuilder()
+					.followRedirects(HttpClient.Redirect.NORMAL)
+					.connectTimeout(connectionTimeout)
+					.executor(Executors.newSingleThreadExecutor());
 
-		if (!managerConfig.isSslValidation()) {
-			try {
-				SSLContext sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
-				HostnameVerifier verifier = new NoopHostnameVerifier();
-				SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, verifier);
-				httpClientBuilder.setSSLSocketFactory(sslSocketFactory);
-			} catch (Exception t) {
-				logError("Error during appender initialization. SSL validation cannot be disabled. "
-						+ "Default SSLConnectionSocketFactory with SSLContext validation will be used.", t);
+			if (!managerConfig.isSslValidation()) {
+				try {
+					var trustManager = new X509ExtendedTrustManager() {
+
+						@Override
+						public X509Certificate[] getAcceptedIssuers() {
+							return new X509Certificate[0];
+						}
+
+						@Override
+						public void checkClientTrusted(X509Certificate[] chain, String authType) {
+						}
+
+						@Override
+						public void checkServerTrusted(X509Certificate[] chain, String authType) {
+						}
+
+						@Override
+						public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) {
+						}
+
+						@Override
+						public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) {
+						}
+
+						@Override
+						public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {
+						}
+
+						@Override
+						public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {
+						}
+					};
+					var sslContext = SSLContext.getInstance("TLS");
+					sslContext.init(null, new TrustManager[] { trustManager }, new SecureRandom());
+					httpClientBuilder.sslContext(sslContext);
+				} catch (NoSuchAlgorithmException | KeyManagementException e) {
+					logError("Error during appender initialization. SSL validation cannot be disabled.", e);
+				}
 			}
-		}
 
-		this.httpClient = httpClientBuilder.build();
+			this.httpClient = httpClientBuilder.build();
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException("ActiveGate URL cannot be converted to URI", e);
+		}
 	}
 
 	DynatraceGenericLogIngestManager(String name,
 			ManagerConfig managerConfig) {
 		this(name,
 				managerConfig,
-				RequestConfig.custom()
-						.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(30))
-						.setSocketTimeout((int) TimeUnit.SECONDS.toMillis(30))
-						.setConnectionRequestTimeout((int) TimeUnit.SECONDS.toMillis(30))
-						.build());
+				Duration.ofSeconds(30L));
 	}
 
 	@Override
@@ -94,15 +121,7 @@ final class DynatraceGenericLogIngestManager
 			TimeUnit timeUnit) {
 		super.releaseSub(timeout, timeUnit);
 
-		if (nonNull(httpClient)) {
-			try {
-				httpClient.close();
-				return true;
-			} catch (IOException e) {
-				logError("Cannot close HttpClient", e);
-			}
-		}
-		return false;
+		return nonNull(httpClient);
 	}
 
 	@Override
@@ -111,28 +130,29 @@ final class DynatraceGenericLogIngestManager
 			return Status.EMPTY_MESSAGE;
 		}
 
-		HttpPost request = new HttpPost(activeGateUrl);
-		request.setHeader(authorizationTokenHeader);
-		request.setEntity(new StringEntity(message, CONTENT_TYPE));
+		final var request = HttpRequest.newBuilder()
+				.uri(activeGateUrl)
+				.POST(HttpRequest.BodyPublishers.ofString(message, UTF_8))
+				.header("Authorization", authorizationToken)
+				.header("Content-Type", CONTENT_TYPE)
+				.header("User-Agent", USER_AGENT)
+				.build();
 
-		StatusLine statusLine;
-		try (CloseableHttpResponse response = httpClient.execute(request)) {
-			statusLine = response.getStatusLine();
-		} catch (IOException e) {
+		try {
+			var response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+			var statusCode = response.statusCode();
+			var success = statusCode == 200 || statusCode == 204;
+			if (!success) {
+				logWarn("ActiveGate rejected request.",
+						new RejectedRequestException(statusCode));
+				return Status.FAILED;
+			}
+
+			return Status.SUCCESS;
+		} catch (IOException | InterruptedException e) {
 			logError("Cannot send log event", e);
 			return Status.EXCEPTION;
 		}
-
-		int statusCode = statusLine.getStatusCode();
-		boolean success = (statusCode == HttpStatus.SC_OK) || (statusCode == HttpStatus.SC_NO_CONTENT);
-
-		if (!success) {
-			logWarn("ActiveGate rejected request.",
-					new RejectedRequestException(statusCode, statusLine.getReasonPhrase()));
-			return Status.FAILED;
-		}
-
-		return Status.SUCCESS;
 	}
 
 	static DynatraceGenericLogIngestManager getManager(String name,
@@ -184,7 +204,7 @@ final class DynatraceGenericLogIngestManager
 			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
-			ManagerConfig data = (ManagerConfig) o;
+			var data = (ManagerConfig) o;
 			return sslValidation == data.sslValidation &&
 					Objects.equals(loggerContext, data.loggerContext) &&
 					Objects.equals(activeGateUrl, data.activeGateUrl) &&
@@ -218,6 +238,10 @@ final class DynatraceGenericLogIngestManager
 	}
 
 	private static final class RejectedRequestException extends RuntimeException {
+
+		private RejectedRequestException(int statusCode) {
+			super("statusCode=" + statusCode, null, false, false);
+		}
 
 		private RejectedRequestException(int statusCode,
 				String reason) {

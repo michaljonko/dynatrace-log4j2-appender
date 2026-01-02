@@ -50,6 +50,10 @@ jar {
 	}
 }
 
+ext["signing.keyId"] = project.findProperty('signing.keyId') ?: System.getenv("GPG_KEY_ID")
+ext["signing.password"] = project.findProperty('signing.password') ?: System.getenv("GPG_PASSWORD")
+ext["signing.secretKeyRingFile"] = project.findProperty('signing.secretKeyRingFile') ?: System.getenv("GPG_KEYRING_FILE")
+
 signing {
 	sign publishing.publications
 }
